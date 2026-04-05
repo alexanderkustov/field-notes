@@ -138,6 +138,7 @@ function createImageCard(image, label, prioritizeImage, index, lightboxIndex) {
   const card = document.createElement('div');
   card.className = 'img-card';
   card.dataset.date = label;
+  card.dataset.lightboxIndex = String(lightboxIndex);
   card.style.animationDelay = `${index * 0.07}s`;
   const hasDimensions = Number.isFinite(image.width) && Number.isFinite(image.height) && image.width > 0 && image.height > 0;
 
@@ -159,7 +160,6 @@ function createImageCard(image, label, prioritizeImage, index, lightboxIndex) {
   }
 
   card.appendChild(img);
-  card.addEventListener('click', () => openLightbox(lightboxIndex));
   return card;
 }
 
@@ -529,7 +529,12 @@ function setupImageStripInteractions(strip) {
   let isPointerDown = false;
   let activePointerId = null;
   let startX = 0;
+  let startY = 0;
   let startLeft = 0;
+  let pointerDownCard = null;
+  let movedDuringPointer = false;
+
+  const DRAG_THRESHOLD = 6;
 
   strip.addEventListener('pointerdown', event => {
     if (event.pointerType === 'mouse' && event.button !== 0) {
@@ -539,7 +544,10 @@ function setupImageStripInteractions(strip) {
     isPointerDown = true;
     activePointerId = event.pointerId;
     startX = event.clientX;
+    startY = event.clientY;
     startLeft = strip.scrollLeft;
+    pointerDownCard = event.target.closest('.img-card');
+    movedDuringPointer = false;
     strip.classList.add('is-dragging');
     strip.setPointerCapture?.(event.pointerId);
   });
@@ -547,6 +555,13 @@ function setupImageStripInteractions(strip) {
   strip.addEventListener('pointermove', event => {
     if (!isPointerDown || event.pointerId !== activePointerId) {
       return;
+    }
+
+    if (
+      Math.abs(event.clientX - startX) > DRAG_THRESHOLD
+      || Math.abs(event.clientY - startY) > DRAG_THRESHOLD
+    ) {
+      movedDuringPointer = true;
     }
 
     strip.scrollLeft = startLeft - (event.clientX - startX);
@@ -566,8 +581,23 @@ function setupImageStripInteractions(strip) {
     strip.classList.remove('is-dragging');
   };
 
-  strip.addEventListener('pointerup', stopDragging);
-  strip.addEventListener('pointercancel', stopDragging);
+  strip.addEventListener('pointerup', event => {
+    const card = pointerDownCard;
+    const shouldOpen = !movedDuringPointer && card?.dataset.lightboxIndex;
+
+    stopDragging(event);
+    pointerDownCard = null;
+    movedDuringPointer = false;
+
+    if (shouldOpen) {
+      openLightbox(Number(card.dataset.lightboxIndex));
+    }
+  });
+  strip.addEventListener('pointercancel', event => {
+    stopDragging(event);
+    pointerDownCard = null;
+    movedDuringPointer = false;
+  });
 
   strip.addEventListener('wheel', event => {
     const hasHorizontalOverflow = strip.scrollWidth > strip.clientWidth;
