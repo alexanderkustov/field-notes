@@ -39,7 +39,7 @@ await fs.mkdir(outputDirectory, { recursive: true });
 const sourceFiles = await collectSourceFiles(dataDirectory);
 const expectedOutputs = new Set();
 const generatedManifest = {
-  version: 2,
+  version: 3,
   images: [],
 };
 const manifestPath = path.join(outputDirectory, 'manifest.json');
@@ -48,9 +48,9 @@ expectedOutputs.add(manifestPath);
 
 for (const sourceFile of sourceFiles) {
   const relativeSourcePath = toPosixPath(path.relative(dataDirectory, sourceFile));
-  const metadata = await readPhotoMetadata(sourceFile);
+  const photoInfo = await readPhotoInfo(sourceFile);
   const assetId = createGeneratedAssetId(relativeSourcePath);
-  const manifestEntry = buildManifestEntry(assetId, relativeSourcePath, metadata);
+  const manifestEntry = buildManifestEntry(assetId, relativeSourcePath, photoInfo);
   const targetDirectory = path.join(outputDirectory, path.dirname(assetId));
   const targetBaseName = path.basename(assetId);
 
@@ -165,6 +165,18 @@ async function removeDirectoryIfEmpty(directory) {
   }
 }
 
+async function readPhotoInfo(sourcePath) {
+  const [metadata, dimensions] = await Promise.all([
+    readPhotoMetadata(sourcePath),
+    readPhotoDimensions(sourcePath),
+  ]);
+
+  return {
+    metadata,
+    dimensions,
+  };
+}
+
 async function readPhotoMetadata(sourcePath) {
   let metadata;
 
@@ -222,6 +234,23 @@ async function readPhotoMetadata(sourcePath) {
   return Object.keys(result).length > 0 ? result : null;
 }
 
+async function readPhotoDimensions(sourcePath) {
+  try {
+    const metadata = await sharp(sourcePath, { failOn: 'none' }).rotate().metadata();
+
+    if (Number.isFinite(metadata.width) && Number.isFinite(metadata.height)) {
+      return {
+        width: metadata.width,
+        height: metadata.height,
+      };
+    }
+  } catch (error) {
+    console.warn(`Skipping image dimensions for ${toPosixPath(path.relative(dataDirectory, sourcePath))}: ${error.message}`);
+  }
+
+  return null;
+}
+
 function roundNumber(value, digits) {
   return Number(value.toFixed(digits));
 }
@@ -235,11 +264,14 @@ function createGeneratedAssetId(relativeSourcePath) {
   return `${digest.slice(0, 2)}/${digest.slice(2)}`;
 }
 
-function buildManifestEntry(assetId, relativeSourcePath, metadata) {
+function buildManifestEntry(assetId, relativeSourcePath, photoInfo) {
+  const metadata = photoInfo?.metadata ?? null;
+  const dimensions = photoInfo?.dimensions ?? null;
   const baseEntry = {
     id: assetId,
     kind: 'ignored',
     metadata: metadata ?? null,
+    ...(dimensions ? { width: dimensions.width, height: dimensions.height } : {}),
   };
 
   const datedMatch = relativeSourcePath.match(/^(\d{4})\/(\d{2})\/(\d{2})\/.+$/);
@@ -253,6 +285,18 @@ function buildManifestEntry(assetId, relativeSourcePath, metadata) {
       year,
       month,
       day,
+    };
+  }
+
+  const monthlyMatch = relativeSourcePath.match(/^(\d{4})\/(\d{2})\/[^/]+$/);
+
+  if (monthlyMatch) {
+    const [, year, month] = monthlyMatch;
+    return {
+      ...baseEntry,
+      kind: 'monthly',
+      year,
+      month,
     };
   }
 

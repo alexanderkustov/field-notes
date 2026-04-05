@@ -3,6 +3,11 @@ import generatedManifest from '../data/.generated/v1/manifest.json';
 const THEME_STORAGE_KEY = 'field-notes-theme';
 const ARCHIVE_DIRECTORY = 'archive';
 const ARCHIVE_LABEL = 'Archive';
+const PRIORITY_IMAGE_COUNT = 2;
+
+let journalImageObserver;
+let lightboxItems = [];
+let activeLightboxIndex = -1;
 
 function getSavedTheme() {
   try {
@@ -51,24 +56,23 @@ function initThemeToggle() {
 }
 
 /* ── Render Journal ── */
-function renderJournal({ days, archive }) {
+function renderJournal({ entries, archive }) {
   const journal = document.getElementById('journal');
+  journal.replaceChildren();
+  lightboxItems = [];
+  activeLightboxIndex = -1;
 
-  if ((!days || days.length === 0) && (!archive || archive.images.length === 0)) {
+  if ((!entries || entries.length === 0) && (!archive || archive.images.length === 0)) {
     journal.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--muted);">No images found in the data folder.</div>';
     return;
   }
 
-  // Update header metadata dynamically based on days
-  updateHeaderMeta(days, archive.images.length);
+  updateHeaderMeta(entries, archive.images.length);
 
   let lastMonth = '';
-  days.forEach((day, di) => {
-    // Parse JS Date from our ISO format date string, or from its components
-    const dayDate = new Date(day.date);
-    const monthLabel = dayDate.toLocaleString('en-GB', { month: 'long' }).toUpperCase() + ' ' + day.year;
+  entries.forEach((entry, di) => {
+    const monthLabel = entry.monthLabel;
 
-    // Month separator
     if (monthLabel !== lastMonth) {
       const sep = document.createElement('div');
       sep.className = 'month-label';
@@ -77,21 +81,23 @@ function renderJournal({ days, archive }) {
       lastMonth = monthLabel;
     }
 
-    // Day row
     const row = document.createElement('div');
-    row.className = 'day-row';
+    row.className = entry.kind === 'month' ? 'day-row day-row--undated' : 'day-row';
 
-    const lbl = document.createElement('div');
-    lbl.className = 'date-label';
-    lbl.innerHTML = `<span class="date-day">${day.dayNum}</span><span class="date-month">${day.monthShort}</span>`;
-    row.appendChild(lbl);
+    if (entry.kind === 'day') {
+      const lbl = document.createElement('div');
+      lbl.className = 'date-label';
+      lbl.innerHTML = `<span class="date-day">${entry.dayNum}</span><span class="date-month">${entry.monthShort}</span>`;
+      row.appendChild(lbl);
+    }
 
     const strip = document.createElement('div');
     strip.className = 'images-strip';
 
-    day.images.forEach((image, idx) => {
-      const prioritizeImage = di === 0 && idx < 2;
-      strip.appendChild(createImageCard(image, day.label, prioritizeImage, idx));
+    entry.images.forEach((image, idx) => {
+      const prioritizeImage = di === 0 && idx < PRIORITY_IMAGE_COUNT;
+      const lightboxIndex = registerLightboxItem(image, entry.label);
+      strip.appendChild(createImageCard(image, entry.label, prioritizeImage, idx, lightboxIndex));
     });
 
     row.appendChild(strip);
@@ -111,7 +117,8 @@ function renderJournal({ days, archive }) {
     strip.className = 'images-strip';
 
     archive.images.forEach((image, idx) => {
-      strip.appendChild(createImageCard(image, ARCHIVE_LABEL, false, idx));
+      const lightboxIndex = registerLightboxItem(image, ARCHIVE_LABEL);
+      strip.appendChild(createImageCard(image, ARCHIVE_LABEL, false, idx, lightboxIndex));
     });
 
     row.appendChild(strip);
@@ -119,38 +126,119 @@ function renderJournal({ days, archive }) {
   }
 }
 
-function createImageCard(image, label, prioritizeImage, index) {
+function registerLightboxItem(image, label) {
+  return lightboxItems.push({
+    src: image.viewSrc,
+    label,
+    metadata: image.metadata,
+  }) - 1;
+}
+
+function createImageCard(image, label, prioritizeImage, index, lightboxIndex) {
   const card = document.createElement('div');
   card.className = 'img-card';
   card.dataset.date = label;
   card.style.animationDelay = `${index * 0.07}s`;
+  const hasDimensions = Number.isFinite(image.width) && Number.isFinite(image.height) && image.width > 0 && image.height > 0;
+
+  if (hasDimensions) {
+    card.style.aspectRatio = `${image.width} / ${image.height}`;
+  }
 
   const img = document.createElement('img');
-  img.src = image.thumbSrc;
   img.loading = prioritizeImage ? 'eager' : 'lazy';
   img.decoding = 'async';
-  img.fetchPriority = prioritizeImage ? 'high' : 'auto';
+  img.fetchPriority = prioritizeImage ? 'high' : 'low';
   img.alt = `Photo from ${label}`;
+  attachImageLoadState(card, img);
+
+  if (prioritizeImage || !hasDimensions) {
+    hydrateImage(img, image.thumbSrc);
+  } else {
+    queueImageForLazyLoad(img, image.thumbSrc);
+  }
 
   card.appendChild(img);
-  card.addEventListener('click', () => openLightbox(image.viewSrc, label, image.metadata));
+  card.addEventListener('click', () => openLightbox(lightboxIndex));
   return card;
 }
 
-function updateHeaderMeta(days, archiveImageCount) {
+function attachImageLoadState(card, img) {
+  const markLoaded = () => card.classList.add('is-loaded');
+
+  if (img.complete && img.naturalWidth > 0) {
+    markLoaded();
+    return;
+  }
+
+  img.addEventListener('load', markLoaded, { once: true });
+}
+
+function queueImageForLazyLoad(img, src) {
+  img.dataset.src = src;
+
+  const observer = getJournalImageObserver();
+  if (!observer) {
+    hydrateImage(img, src);
+    return;
+  }
+
+  observer.observe(img);
+}
+
+function hydrateImage(img, src = img.dataset.src) {
+  if (!src || img.dataset.loaded === 'true') {
+    return;
+  }
+
+  img.src = src;
+  img.dataset.loaded = 'true';
+  delete img.dataset.src;
+}
+
+function getJournalImageObserver() {
+  if (journalImageObserver || typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+    return journalImageObserver ?? null;
+  }
+
+  const rootMargin = window.matchMedia('(max-width: 720px)').matches
+    ? '120px 0px 120px 0px'
+    : '240px 0px 240px 0px';
+
+  journalImageObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) {
+        return;
+      }
+
+      const img = entry.target;
+      hydrateImage(img);
+      journalImageObserver.unobserve(img);
+    });
+  }, {
+    rootMargin,
+    threshold: 0.01,
+  });
+
+  return journalImageObserver;
+}
+
+function updateHeaderMeta(entries, archiveImageCount) {
   const metaElem = document.querySelector('.header-meta');
   if (!metaElem) return;
 
   const segments = [];
 
-  if (days.length) {
-    const totalDays = days.length;
-    // unique months using Year-Month format
-    const uniqueMonths = new Set(days.map(d => `${d.year}-${d.monthNum}`));
+  if (entries.length) {
+    const totalDays = entries.filter(entry => entry.kind === 'day').length;
+    const uniqueMonths = new Set(entries.map(entry => `${entry.year}-${entry.monthNum}`));
     const numMonths = uniqueMonths.size;
 
     segments.push(`${numMonths} month${numMonths !== 1 ? 's' : ''}`);
-    segments.push(`${totalDays} day${totalDays !== 1 ? 's' : ''}`);
+
+    if (totalDays > 0) {
+      segments.push(`${totalDays} day${totalDays !== 1 ? 's' : ''}`);
+    }
   }
 
   if (archiveImageCount > 0) {
@@ -174,16 +262,45 @@ function setLightboxExifExpanded(expanded) {
   lightboxInfoToggle.setAttribute('aria-expanded', String(shouldExpand));
 }
 
+function isLightboxOpen() {
+  return lightbox.classList.contains('active');
+}
+
 function closeLightbox() {
   lightbox.classList.remove('active');
   setLightboxExifExpanded(false);
+  activeLightboxIndex = -1;
 }
 
-function openLightbox(imgSrc, dateStr, metadata) {
-  lightboxWrap.innerHTML = `<img src="${imgSrc}" alt="Photo on ${dateStr}" loading="eager" decoding="async" />`;
-  lightboxMeta.textContent = dateStr;
-  renderExifDetails(lightboxExif, metadata);
+function renderLightboxItem(item) {
+  const image = document.createElement('img');
+  image.src = item.src;
+  image.alt = `Photo on ${item.label}`;
+  image.loading = 'eager';
+  image.decoding = 'async';
+
+  lightboxWrap.replaceChildren(image);
+  lightboxMeta.textContent = item.label;
+  renderExifDetails(lightboxExif, item.metadata);
+}
+
+function openLightbox(index) {
+  const item = lightboxItems[index];
+  if (!item) return;
+
+  activeLightboxIndex = index;
+  renderLightboxItem(item);
   lightbox.classList.add('active');
+}
+
+function navigateLightbox(offset) {
+  if (!isLightboxOpen() || lightboxItems.length === 0 || activeLightboxIndex < 0) {
+    return;
+  }
+
+  const nextIndex = (activeLightboxIndex + offset + lightboxItems.length) % lightboxItems.length;
+  activeLightboxIndex = nextIndex;
+  renderLightboxItem(lightboxItems[nextIndex]);
 }
 
 document.getElementById('lb-close').addEventListener('click', closeLightbox);
@@ -194,18 +311,25 @@ lightbox.addEventListener('click', e => {
   if (e.target === lightbox) closeLightbox();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeLightbox();
-});
+  if (!isLightboxOpen()) {
+    return;
+  }
 
-/* ── Cursor ── */
-const cursor = document.getElementById('cursor');
-document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top  = e.clientY + 'px';
-});
-document.querySelectorAll && document.addEventListener('mouseover', e => {
-  if (e.target.closest('.img-card')) cursor.classList.add('big');
-  else cursor.classList.remove('big');
+  if (e.key === 'Escape') {
+    closeLightbox();
+    return;
+  }
+
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    navigateLightbox(-1);
+    return;
+  }
+
+  if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    navigateLightbox(1);
+  }
 });
 
 /* ── Build data using Vite's import.meta.glob ── */
@@ -213,7 +337,7 @@ function initData() {
   // Discover optimized image derivatives while preserving the date-based folder flow.
   const thumbs = import.meta.glob('../data/.generated/v1/**/*--thumb.webp', { eager: true, import: 'default' });
   const views = import.meta.glob('../data/.generated/v1/**/*--view.webp', { eager: true, import: 'default' });
-  const daysMap = new Map();
+  const journalEntries = new Map();
   const archiveImages = [];
   const thumbMap = new Map();
   const viewMap = new Map();
@@ -237,15 +361,30 @@ function initData() {
     const image = {
       thumbSrc,
       viewSrc: viewMap.get(entry.id) ?? thumbSrc,
-      metadata: entry.metadata ?? null
+      metadata: entry.metadata ?? null,
+      width: Number.isFinite(entry.width) ? entry.width : null,
+      height: Number.isFinite(entry.height) ? entry.height : null,
     };
 
     if (entry.kind === 'dated' && entry.date) {
-      if (!daysMap.has(entry.date)) {
-        daysMap.set(entry.date, createDayEntry(entry.date, entry.year, entry.month, entry.day));
+      const datedKey = `day:${entry.date}`;
+
+      if (!journalEntries.has(datedKey)) {
+        journalEntries.set(datedKey, createDayEntry(entry.date, entry.year, entry.month, entry.day));
       }
 
-      daysMap.get(entry.date).images.push(image);
+      journalEntries.get(datedKey).images.push(image);
+      continue;
+    }
+
+    if (entry.kind === 'monthly' && entry.year && entry.month) {
+      const monthlyKey = `month:${entry.year}-${entry.month}`;
+
+      if (!journalEntries.has(monthlyKey)) {
+        journalEntries.set(monthlyKey, createMonthEntry(entry.year, entry.month));
+      }
+
+      journalEntries.get(monthlyKey).images.push(image);
 
       continue;
     }
@@ -255,10 +394,9 @@ function initData() {
     }
   }
 
-  // Convert to array and sort descending
-  const sortedDates = Array.from(daysMap.keys()).sort((a, b) => b.localeCompare(a));
+  const sortedEntries = Array.from(journalEntries.values()).sort((a, b) => b.sortKey.localeCompare(a.sortKey));
   return {
-    days: sortedDates.map(date => daysMap.get(date)),
+    entries: sortedEntries,
     archive: {
       label: ARCHIVE_LABEL,
       images: archiveImages
@@ -267,15 +405,35 @@ function initData() {
 }
 
 function createDayEntry(dateStr, year, month, day) {
-  const d = new Date(dateStr);
+  const d = new Date(Number(year), Number(month) - 1, Number(day));
+  const monthShort = d.toLocaleString('en-GB', { month: 'short' }).toUpperCase();
+  const monthLabel = d.toLocaleString('en-GB', { month: 'long' }).toUpperCase();
 
   return {
+    kind: 'day',
+    sortKey: dateStr,
     date: dateStr,
     year,
     monthNum: month,
     dayNum: day,
-    label: `${day} ${d.toLocaleString('en-GB', { month: 'short' }).toUpperCase()} ${year}`,
-    monthShort: d.toLocaleString('en-GB', { month: 'short' }).toUpperCase(),
+    label: `${day} ${monthShort} ${year}`,
+    monthShort,
+    monthLabel: `${monthLabel} ${year}`,
+    images: []
+  };
+}
+
+function createMonthEntry(year, month) {
+  const d = new Date(Number(year), Number(month) - 1, 1);
+  const monthLong = d.toLocaleString('en-GB', { month: 'long' });
+
+  return {
+    kind: 'month',
+    sortKey: `${year}-${month}-00`,
+    year,
+    monthNum: month,
+    label: `${monthLong} ${year}`,
+    monthLabel: `${monthLong.toUpperCase()} ${year}`,
     images: []
   };
 }
@@ -367,6 +525,63 @@ function formatSignedNumber(value) {
   return value > 0 ? `+${formatNumber(value)}` : formatNumber(value);
 }
 
+function setupImageStripInteractions(strip) {
+  let isPointerDown = false;
+  let activePointerId = null;
+  let startX = 0;
+  let startLeft = 0;
+
+  strip.addEventListener('pointerdown', event => {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+
+    isPointerDown = true;
+    activePointerId = event.pointerId;
+    startX = event.clientX;
+    startLeft = strip.scrollLeft;
+    strip.classList.add('is-dragging');
+    strip.setPointerCapture?.(event.pointerId);
+  });
+
+  strip.addEventListener('pointermove', event => {
+    if (!isPointerDown || event.pointerId !== activePointerId) {
+      return;
+    }
+
+    strip.scrollLeft = startLeft - (event.clientX - startX);
+  });
+
+  const stopDragging = event => {
+    if (!isPointerDown || (event && event.pointerId !== activePointerId)) {
+      return;
+    }
+
+    if (activePointerId !== null && strip.hasPointerCapture?.(activePointerId)) {
+      strip.releasePointerCapture(activePointerId);
+    }
+
+    isPointerDown = false;
+    activePointerId = null;
+    strip.classList.remove('is-dragging');
+  };
+
+  strip.addEventListener('pointerup', stopDragging);
+  strip.addEventListener('pointercancel', stopDragging);
+
+  strip.addEventListener('wheel', event => {
+    const hasHorizontalOverflow = strip.scrollWidth > strip.clientWidth;
+    const wantsHorizontalScroll = event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+
+    if (!hasHorizontalOverflow || !wantsHorizontalScroll) {
+      return;
+    }
+
+    event.preventDefault();
+    strip.scrollLeft += event.deltaX || event.deltaY;
+  }, { passive: false });
+}
+
 /* ── Bootstrap ── */
 document.addEventListener('DOMContentLoaded', () => {
   initThemeToggle();
@@ -375,10 +590,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderJournal(finalData);
 
   document.querySelectorAll('.images-strip').forEach(strip => {
-    let down = false, sx, sl;
-    strip.addEventListener('mousedown', e => { down = true; sx = e.pageX; sl = strip.scrollLeft; });
-    document.addEventListener('mousemove', e => { if (down) strip.scrollLeft = sl - (e.pageX - sx); });
-    document.addEventListener('mouseup',   () => { down = false; });
-    strip.addEventListener('wheel', e => { e.preventDefault(); strip.scrollLeft += e.deltaY; }, { passive: false });
+    setupImageStripInteractions(strip);
   });
 });
