@@ -23,6 +23,10 @@
   --row-h: 200px;
   --gap: 3px;
   --label-w: 96px;
+  --archive-card-panorama-h: 92px;
+  --archive-card-compact-h: 126px;
+  --archive-card-standard-h: 168px;
+  --archive-card-feature-h: 214px;
 }
 
 html[data-theme="light"] {
@@ -187,6 +191,52 @@ header {
 }
 
 /* ── Month separator ── */
+.year-separator {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 44px 18px 18px var(--label-w);
+  margin-top: 18px;
+  overflow: hidden;
+}
+
+.year-separator::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: var(--label-w);
+  right: 18px;
+  height: 1px;
+  background: var(--header-frame);
+  opacity: 0.6;
+}
+
+.year-separator-value {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.03em;
+  font-family: 'Archivo', sans-serif;
+  font-size: clamp(2.8rem, 8vw, 6rem);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: -0.09em;
+}
+
+.year-separator-leading,
+.year-separator-trailing {
+  display: block;
+}
+
+.year-separator-leading {
+  color: var(--header-frame);
+}
+
+.year-separator-trailing {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--header-frame);
+  paint-order: stroke fill;
+}
+
 .month-label,
 .journal-section-label {
   display: flex;
@@ -263,6 +313,17 @@ header {
 
 .day-row--undated:hover .date-label { color: inherit; }
 
+.archive-layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0 18px 24px var(--label-w);
+  border-bottom: 1px solid var(--line-soft);
+  content-visibility: auto;
+  contain-intrinsic-size: 520px;
+}
+
 /* scrollable images strip */
 .images-strip {
   display: flex;
@@ -294,6 +355,26 @@ header {
   animation: reveal 0.6s ease both;
   background-color: var(--surface);
   border-radius: 2px;
+}
+
+.archive-layout .img-card {
+  height: var(--archive-card-h, var(--archive-card-standard-h));
+}
+
+.archive-card--panorama {
+  --archive-card-h: var(--archive-card-panorama-h);
+}
+
+.archive-card--compact {
+  --archive-card-h: var(--archive-card-compact-h);
+}
+
+.archive-card--standard {
+  --archive-card-h: var(--archive-card-standard-h);
+}
+
+.archive-card--feature {
+  --archive-card-h: var(--archive-card-feature-h);
 }
 
 .img-card img {
@@ -452,6 +533,10 @@ header {
   :root {
     --row-h: 180px;
     --label-w: 80px;
+    --archive-card-panorama-h: 84px;
+    --archive-card-compact-h: 112px;
+    --archive-card-standard-h: 146px;
+    --archive-card-feature-h: 188px;
   }
 
   header {
@@ -460,8 +545,23 @@ header {
     padding-right: 20px;
   }
 
+  .year-separator {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .year-separator::before {
+    left: 20px;
+    right: 20px;
+  }
+
   .month-label {
     padding-left: 20px;
+  }
+
+  .archive-layout {
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
   .date-label {
@@ -477,6 +577,10 @@ header {
   :root {
     --row-h: clamp(220px, 56vw, 320px);
     --gap: 9px;
+    --archive-card-panorama-h: 72px;
+    --archive-card-compact-h: 92px;
+    --archive-card-standard-h: 122px;
+    --archive-card-feature-h: 160px;
   }
 
   header {
@@ -515,6 +619,26 @@ header {
 
   .month-label {
     padding: 18px 16px 10px;
+  }
+
+  .archive-layout {
+    gap: 8px;
+    padding: 0 16px 18px;
+  }
+
+  .year-separator {
+    padding: 28px 16px 14px;
+    margin-top: 12px;
+  }
+
+  .year-separator::before {
+    top: 10px;
+    left: 16px;
+    right: 16px;
+  }
+
+  .year-separator-value {
+    font-size: clamp(1.9rem, 16vw, 4rem);
   }
 
   .day-row {

@@ -69,8 +69,18 @@ function renderJournal({ entries, archive }) {
 
   updateHeaderMeta(entries, archive.images.length);
 
+  let lastYear = '';
   let lastMonth = '';
   entries.forEach((entry, di) => {
+    if (lastYear && entry.year !== lastYear) {
+      journal.appendChild(createYearSeparator(entry.year));
+      lastMonth = '';
+    }
+
+    if (entry.year !== lastYear) {
+      lastYear = entry.year;
+    }
+
     const monthLabel = entry.monthLabel;
 
     if (monthLabel !== lastMonth) {
@@ -109,21 +119,95 @@ function renderJournal({ entries, archive }) {
     sectionLabel.className = 'journal-section-label';
     sectionLabel.innerHTML = `<span>${ARCHIVE_LABEL}</span>`;
     journal.appendChild(sectionLabel);
-
-    const row = document.createElement('div');
-    row.className = 'day-row day-row--undated';
-
-    const strip = document.createElement('div');
-    strip.className = 'images-strip';
-
-    archive.images.forEach((image, idx) => {
-      const lightboxIndex = registerLightboxItem(image, ARCHIVE_LABEL);
-      strip.appendChild(createImageCard(image, ARCHIVE_LABEL, false, idx, lightboxIndex));
-    });
-
-    row.appendChild(strip);
-    journal.appendChild(row);
+    journal.appendChild(createArchiveLayout(archive.images));
   }
+}
+
+function createYearSeparator(year) {
+  const separator = document.createElement('div');
+  separator.className = 'year-separator';
+
+  const value = document.createElement('div');
+  value.className = 'year-separator-value';
+
+  const leading = document.createElement('span');
+  leading.className = 'year-separator-leading';
+  leading.textContent = year.slice(0, 2);
+
+  const trailing = document.createElement('span');
+  trailing.className = 'year-separator-trailing';
+  trailing.textContent = year.slice(2);
+
+  value.append(leading, trailing);
+  separator.appendChild(value);
+  return separator;
+}
+
+function createArchiveLayout(images) {
+  const layout = document.createElement('div');
+  layout.className = 'archive-layout';
+
+  buildArchiveLayoutImages(images).forEach(({ image, variant }, idx) => {
+    const lightboxIndex = registerLightboxItem(image, ARCHIVE_LABEL);
+    const card = createImageCard(image, ARCHIVE_LABEL, false, idx, lightboxIndex);
+    card.classList.add('archive-card', variant);
+    layout.appendChild(card);
+  });
+
+  layout.addEventListener('click', event => {
+    const card = event.target.closest('.img-card');
+    if (!card || !layout.contains(card)) {
+      return;
+    }
+
+    openLightbox(Number(card.dataset.lightboxIndex));
+  });
+
+  return layout;
+}
+
+function buildArchiveLayoutImages(images) {
+  return images
+    .map((image, index) => {
+      const seed = hashString(`${image.viewSrc}|${image.width ?? 0}|${image.height ?? 0}|${index}`);
+
+      return {
+        image,
+        order: seed,
+        variant: getArchiveCardVariant(image, seed),
+      };
+    })
+    .sort((a, b) => a.order - b.order);
+}
+
+function getArchiveCardVariant(image, seed) {
+  const hasDimensions = Number.isFinite(image.width) && Number.isFinite(image.height) && image.width > 0 && image.height > 0;
+  const aspectRatio = hasDimensions ? image.width / image.height : 1;
+
+  if (aspectRatio >= 2.1) {
+    return 'archive-card--panorama';
+  }
+
+  if (aspectRatio >= 1.45) {
+    return seed % 5 === 0 ? 'archive-card--standard' : 'archive-card--compact';
+  }
+
+  if (aspectRatio <= 0.82) {
+    return seed % 2 === 0 ? 'archive-card--feature' : 'archive-card--standard';
+  }
+
+  return ['archive-card--standard', 'archive-card--feature', 'archive-card--compact'][seed % 3];
+}
+
+function hashString(value) {
+  let hash = 2166136261;
+
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash >>> 0;
 }
 
 function registerLightboxItem(image, label) {
