@@ -1,0 +1,19 @@
+{
+  "name": "field-notes",
+  "version": "1.0.0",
+  "description": "A minimalist, static web journal that automatically displays your photos in a calendar-like strip layout.",
+  "scripts": {
+    "images": "node scripts/generate-images.mjs",
+    "predev": "npm run images",
+    "dev": "vite",
+    "prebuild": "npm run images",
+    "build": "vite build",
+    "prepreview": "npm run images",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "exifr": "^7.1.3",
+    "sharp": "^0.34.5",
+    "vite": "^5.0.0"
+  }
+}

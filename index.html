@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>journal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('field-notes-theme');
+      if (savedTheme === 'light') {
+        document.documentElement.dataset.theme = 'light';
+      }
+    } catch {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<header>
+  <span class="site-name">field notes</span>
+  <div class="header-tools">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">light</button>
+    <span class="header-meta"></span>
+  </div>
+</header>
+
+<div id="journal"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lb-close">close ✕</button>
+    <div id="lb-img-wrap"></div>
+    <div class="lightbox-meta">
+      <span class="lightbox-date" id="lb-meta"></span>
+      <dl class="lightbox-exif" id="lb-exif" hidden></dl>
+    </div>
+  </div>
+</div>
+
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
