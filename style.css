@@ -270,6 +270,14 @@ header {
   gap: 12px;
 }
 
+.lightbox-meta-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .lightbox-date {
   font-size: 0.58rem;
   letter-spacing: 0.2em;
@@ -278,11 +286,45 @@ header {
   text-align: center;
 }
 
+.lightbox-info-toggle {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.lightbox-info-toggle:hover,
+.lightbox-info-toggle[aria-expanded="true"] {
+  color: var(--fg);
+}
+
 .lightbox-exif {
   display: grid;
   width: 100%;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px 18px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    max-height 0.28s ease,
+    opacity 0.2s ease,
+    transform 0.28s ease;
+  pointer-events: none;
+}
+
+.lightbox-exif.is-open {
+  max-height: 480px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 .lightbox-exif-item {
@@ -458,6 +500,10 @@ header {
 
   .lightbox-meta {
     width: 100%;
+  }
+
+  .lightbox-meta-header {
+    gap: 10px;
   }
 
   .lightbox-date {

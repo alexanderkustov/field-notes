@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +9,7 @@ const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const rootDirectory = path.resolve(scriptDirectory, '..');
 const dataDirectory = path.join(rootDirectory, 'data');
 const outputDirectory = path.join(dataDirectory, '.generated', 'v1');
+const ARCHIVE_DIRECTORY = 'archive';
 
 const SOURCE_EXTENSIONS = new Set([
   '.jpg',
@@ -36,25 +38,28 @@ await fs.mkdir(outputDirectory, { recursive: true });
 
 const sourceFiles = await collectSourceFiles(dataDirectory);
 const expectedOutputs = new Set();
-const metadataManifest = {};
+const generatedManifest = {
+  version: 2,
+  images: [],
+};
 const manifestPath = path.join(outputDirectory, 'manifest.json');
 
 expectedOutputs.add(manifestPath);
 
 for (const sourceFile of sourceFiles) {
   const relativeSourcePath = toPosixPath(path.relative(dataDirectory, sourceFile));
-  const relativeSourceDirectory = path.dirname(relativeSourcePath);
-  const targetDirectory = path.join(outputDirectory, relativeSourceDirectory);
   const metadata = await readPhotoMetadata(sourceFile);
+  const assetId = createGeneratedAssetId(relativeSourcePath);
+  const manifestEntry = buildManifestEntry(assetId, relativeSourcePath, metadata);
+  const targetDirectory = path.join(outputDirectory, path.dirname(assetId));
+  const targetBaseName = path.basename(assetId);
 
-  if (metadata) {
-    metadataManifest[relativeSourcePath] = metadata;
-  }
+  generatedManifest.images.push(manifestEntry);
 
   await fs.mkdir(targetDirectory, { recursive: true });
 
   for (const variant of VARIANTS) {
-    const outputPath = path.join(targetDirectory, `${path.basename(relativeSourcePath)}${variant.suffix}`);
+    const outputPath = path.join(targetDirectory, `${targetBaseName}${variant.suffix}`);
     expectedOutputs.add(outputPath);
 
     if (!(await shouldGenerate(sourceFile, outputPath))) {
@@ -86,7 +91,7 @@ for (const sourceFile of sourceFiles) {
 }
 
 await removeStaleOutputs(outputDirectory, expectedOutputs);
-await fs.writeFile(manifestPath, `${JSON.stringify(metadataManifest, null, 2)}\n`);
+await fs.writeFile(manifestPath, `${JSON.stringify(generatedManifest, null, 2)}\n`);
 
 console.log(
   `Optimized ${sourceFiles.length} source image(s): ${stats.written} written, ${stats.skipped} skipped, ${stats.removed} removed, ${stats.failed} failed.`,
@@ -223,4 +228,40 @@ function roundNumber(value, digits) {
 
 function toPosixPath(value) {
   return value.split(path.sep).join('/');
+}
+
+function createGeneratedAssetId(relativeSourcePath) {
+  const digest = createHash('sha256').update(relativeSourcePath).digest('hex');
+  return `${digest.slice(0, 2)}/${digest.slice(2)}`;
+}
+
+function buildManifestEntry(assetId, relativeSourcePath, metadata) {
+  const baseEntry = {
+    id: assetId,
+    kind: 'ignored',
+    metadata: metadata ?? null,
+  };
+
+  const datedMatch = relativeSourcePath.match(/^(\d{4})\/(\d{2})\/(\d{2})\/.+$/);
+
+  if (datedMatch) {
+    const [, year, month, day] = datedMatch;
+    return {
+      ...baseEntry,
+      kind: 'dated',
+      date: `${year}-${month}-${day}`,
+      year,
+      month,
+      day,
+    };
+  }
+
+  if (relativeSourcePath.startsWith(`${ARCHIVE_DIRECTORY}/`)) {
+    return {
+      ...baseEntry,
+      kind: 'archive',
+    };
+  }
+
+  return baseEntry;
 }

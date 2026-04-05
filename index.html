@@ -36,7 +36,19 @@
     <button class="lightbox-close" id="lb-close">close ✕</button>
     <div id="lb-img-wrap"></div>
     <div class="lightbox-meta">
-      <span class="lightbox-date" id="lb-meta"></span>
+      <div class="lightbox-meta-header">
+        <span class="lightbox-date" id="lb-meta"></span>
+        <button
+          class="lightbox-info-toggle"
+          id="lb-info-toggle"
+          type="button"
+          aria-controls="lb-exif"
+          aria-expanded="false"
+          hidden
+        >
+          info
+        </button>
+      </div>
       <dl class="lightbox-exif" id="lb-exif" hidden></dl>
     </div>
   </div>

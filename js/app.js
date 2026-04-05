@@ -1,8 +1,8 @@
-import metadataManifest from '../data/.generated/v1/manifest.json';
+import generatedManifest from '../data/.generated/v1/manifest.json';
 
 const THEME_STORAGE_KEY = 'field-notes-theme';
-const PRE_2025_DIRECTORY = 'archive';
-const PRE_2025_LABEL = 'Pre 2025';
+const ARCHIVE_DIRECTORY = 'archive';
+const ARCHIVE_LABEL = 'Archive';
 
 function getSavedTheme() {
   try {
@@ -51,16 +51,16 @@ function initThemeToggle() {
 }
 
 /* ── Render Journal ── */
-function renderJournal({ days, pre2025 }) {
+function renderJournal({ days, archive }) {
   const journal = document.getElementById('journal');
 
-  if ((!days || days.length === 0) && (!pre2025 || pre2025.images.length === 0)) {
+  if ((!days || days.length === 0) && (!archive || archive.images.length === 0)) {
     journal.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--muted);">No images found in the data folder.</div>';
     return;
   }
 
   // Update header metadata dynamically based on days
-  updateHeaderMeta(days, pre2025.images.length);
+  updateHeaderMeta(days, archive.images.length);
 
   let lastMonth = '';
   days.forEach((day, di) => {
@@ -98,10 +98,10 @@ function renderJournal({ days, pre2025 }) {
     journal.appendChild(row);
   });
 
-  if (pre2025.images.length > 0) {
+  if (archive.images.length > 0) {
     const sectionLabel = document.createElement('div');
     sectionLabel.className = 'journal-section-label';
-    sectionLabel.innerHTML = `<span>${PRE_2025_LABEL}</span>`;
+    sectionLabel.innerHTML = `<span>${ARCHIVE_LABEL}</span>`;
     journal.appendChild(sectionLabel);
 
     const row = document.createElement('div');
@@ -110,8 +110,8 @@ function renderJournal({ days, pre2025 }) {
     const strip = document.createElement('div');
     strip.className = 'images-strip';
 
-    pre2025.images.forEach((image, idx) => {
-      strip.appendChild(createImageCard(image, PRE_2025_LABEL, false, idx));
+    archive.images.forEach((image, idx) => {
+      strip.appendChild(createImageCard(image, ARCHIVE_LABEL, false, idx));
     });
 
     row.appendChild(strip);
@@ -161,27 +161,40 @@ function updateHeaderMeta(days, archiveImageCount) {
 }
 
 /* ── Lightbox ── */
-function openLightbox(imgSrc, dateStr, metadata) {
-  const lb     = document.getElementById('lightbox');
-  const wrap   = document.getElementById('lb-img-wrap');
-  const meta   = document.getElementById('lb-meta');
-  const exif   = document.getElementById('lb-exif');
-  
-  wrap.innerHTML = `<img src="${imgSrc}" alt="Photo on ${dateStr}" loading="eager" decoding="async" />`;
-  meta.textContent = dateStr;
-  renderExifDetails(exif, metadata);
-  lb.classList.add('active');
+const lightbox = document.getElementById('lightbox');
+const lightboxWrap = document.getElementById('lb-img-wrap');
+const lightboxMeta = document.getElementById('lb-meta');
+const lightboxExif = document.getElementById('lb-exif');
+const lightboxInfoToggle = document.getElementById('lb-info-toggle');
+
+function setLightboxExifExpanded(expanded) {
+  const shouldExpand = expanded && !lightboxExif.hidden;
+  lightboxExif.classList.toggle('is-open', shouldExpand);
+  lightboxExif.setAttribute('aria-hidden', String(!shouldExpand));
+  lightboxInfoToggle.setAttribute('aria-expanded', String(shouldExpand));
 }
 
-document.getElementById('lb-close').addEventListener('click', () => {
-  document.getElementById('lightbox').classList.remove('active');
+function closeLightbox() {
+  lightbox.classList.remove('active');
+  setLightboxExifExpanded(false);
+}
+
+function openLightbox(imgSrc, dateStr, metadata) {
+  lightboxWrap.innerHTML = `<img src="${imgSrc}" alt="Photo on ${dateStr}" loading="eager" decoding="async" />`;
+  lightboxMeta.textContent = dateStr;
+  renderExifDetails(lightboxExif, metadata);
+  lightbox.classList.add('active');
+}
+
+document.getElementById('lb-close').addEventListener('click', closeLightbox);
+lightboxInfoToggle.addEventListener('click', () => {
+  setLightboxExifExpanded(lightboxInfoToggle.getAttribute('aria-expanded') !== 'true');
 });
-document.getElementById('lightbox').addEventListener('click', e => {
-  if (e.target === document.getElementById('lightbox'))
-    document.getElementById('lightbox').classList.remove('active');
+lightbox.addEventListener('click', e => {
+  if (e.target === lightbox) closeLightbox();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+  if (e.key === 'Escape') closeLightbox();
 });
 
 /* ── Cursor ── */
@@ -201,55 +214,44 @@ function initData() {
   const thumbs = import.meta.glob('../data/.generated/v1/**/*--thumb.webp', { eager: true, import: 'default' });
   const views = import.meta.glob('../data/.generated/v1/**/*--view.webp', { eager: true, import: 'default' });
   const daysMap = new Map();
-  const pre2025Images = [];
+  const archiveImages = [];
+  const thumbMap = new Map();
   const viewMap = new Map();
 
-  for (const [assetPath, src] of Object.entries(views)) {
-    const assetKey = extractGeneratedAssetKey(assetPath, '--view.webp');
-    if (assetKey) viewMap.set(assetKey, src);
+  for (const [assetPath, src] of Object.entries(thumbs)) {
+    const assetId = extractGeneratedAssetId(assetPath, '--thumb.webp');
+    if (assetId) thumbMap.set(assetId, src);
   }
 
-  for (const assetPath of Object.keys(thumbs).sort()) {
-    const assetKey = extractGeneratedAssetKey(assetPath, '--thumb.webp');
-    if (!assetKey) continue;
+  for (const [assetPath, src] of Object.entries(views)) {
+    const assetId = extractGeneratedAssetId(assetPath, '--view.webp');
+    if (assetId) viewMap.set(assetId, src);
+  }
 
-    const thumbSrc = thumbs[assetPath];
-    const viewSrc = viewMap.get(assetKey) ?? thumbSrc;
-    const metadata = metadataManifest[assetKey] ?? null;
-    const datedMatch = assetKey.match(/^(\d{4})\/(\d{2})\/(\d{2})\/.+$/);
+  const manifestImages = Array.isArray(generatedManifest.images) ? generatedManifest.images : [];
 
-    if (datedMatch) {
-      const [, year, month, day] = datedMatch;
-      const dateStr = `${year}-${month}-${day}`;
+  for (const entry of manifestImages) {
+    const thumbSrc = thumbMap.get(entry.id);
+    if (!thumbSrc) continue;
 
-      if (!daysMap.has(dateStr)) {
-        const d = new Date(dateStr);
-        daysMap.set(dateStr, {
-          date: dateStr,
-          year,
-          monthNum: month,
-          dayNum: day,
-          label: `${day} ${d.toLocaleString('en-GB', { month: 'short' }).toUpperCase()} ${year}`,
-          monthShort: d.toLocaleString('en-GB', { month: 'short' }).toUpperCase(),
-          images: []
-        });
+    const image = {
+      thumbSrc,
+      viewSrc: viewMap.get(entry.id) ?? thumbSrc,
+      metadata: entry.metadata ?? null
+    };
+
+    if (entry.kind === 'dated' && entry.date) {
+      if (!daysMap.has(entry.date)) {
+        daysMap.set(entry.date, createDayEntry(entry.date, entry.year, entry.month, entry.day));
       }
-      
-      daysMap.get(dateStr).images.push({
-        thumbSrc,
-        viewSrc,
-        metadata
-      });
+
+      daysMap.get(entry.date).images.push(image);
 
       continue;
     }
 
-    if (assetKey.startsWith(`${PRE_2025_DIRECTORY}/`)) {
-      pre2025Images.push({
-        thumbSrc,
-        viewSrc,
-        metadata
-      });
+    if (entry.kind === 'archive') {
+      archiveImages.push(image);
     }
   }
 
@@ -257,14 +259,28 @@ function initData() {
   const sortedDates = Array.from(daysMap.keys()).sort((a, b) => b.localeCompare(a));
   return {
     days: sortedDates.map(date => daysMap.get(date)),
-    pre2025: {
-      label: PRE_2025_LABEL,
-      images: pre2025Images
+    archive: {
+      label: ARCHIVE_LABEL,
+      images: archiveImages
     }
   };
 }
 
-function extractGeneratedAssetKey(assetPath, suffix) {
+function createDayEntry(dateStr, year, month, day) {
+  const d = new Date(dateStr);
+
+  return {
+    date: dateStr,
+    year,
+    monthNum: month,
+    dayNum: day,
+    label: `${day} ${d.toLocaleString('en-GB', { month: 'short' }).toUpperCase()} ${year}`,
+    monthShort: d.toLocaleString('en-GB', { month: 'short' }).toUpperCase(),
+    images: []
+  };
+}
+
+function extractGeneratedAssetId(assetPath, suffix) {
   const match = assetPath.match(/data\/\.generated\/v1\/(.+)$/);
   if (!match) return null;
 
@@ -291,7 +307,10 @@ function renderExifDetails(container, metadata) {
     })
   );
 
-  container.hidden = items.length === 0;
+  const hasExif = items.length > 0;
+  container.hidden = !hasExif;
+  lightboxInfoToggle.hidden = !hasExif;
+  setLightboxExifExpanded(false);
 }
 
 function buildExifItems(metadata) {
