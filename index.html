@@ -3,17 +3,40 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- Primary Meta Tags -->
   <title>photographic reflexes</title>
+  <meta name="title" content="photographic reflexes">
+  <meta name="description" content="A minimalist, static photo journal.">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="photographic reflexes">
+  <meta property="og:description" content="A minimalist, static photo journal.">
+  <meta property="og:image" content="https://alxndr.co/social-preview.jpg">
+  <meta property="og:url" content="https://alxndr.co/">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="photographic reflexes">
+  <meta name="twitter:description" content="A minimalist, static photo journal.">
+  <meta name="twitter:image" content="https://alxndr.co/social-preview.jpg">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;900&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
-  <script>
-    try {
-      const savedTheme = localStorage.getItem('field-notes-theme');
-      if (savedTheme === 'light') {
-        document.documentElement.dataset.theme = 'light';
-      }
-    } catch {}
-  </script>
+<script>
+  try {
+    const savedTheme = localStorage.getItem('field-notes-theme');
+    if (savedTheme === 'light') {
+      document.documentElement.dataset.theme = 'light';
+    } else if (savedTheme === 'dark') {
+      document.documentElement.dataset.theme = 'dark';
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      document.documentElement.dataset.theme = 'light';
+    } else {
+      document.documentElement.dataset.theme = 'dark';
+    }
+  } catch {}
+</script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>

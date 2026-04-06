@@ -37,19 +37,40 @@ function applyTheme(theme) {
   toggle.setAttribute('aria-pressed', String(nextTheme === 'light'));
 }
 
+function getSystemTheme() {
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    return 'light';
+  }
+  return 'dark';
+}
+
 function initThemeToggle() {
   const toggle = document.getElementById('theme-toggle');
   if (!toggle) return;
 
   const savedTheme = getSavedTheme();
-  const initialTheme = savedTheme === 'light' ? 'light' : 'dark';
-
+  const initialTheme = savedTheme || getSystemTheme();
   applyTheme(initialTheme);
+
+  // Listen for system theme changes
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      const saved = getSavedTheme();
+      if (!saved) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+      const saved = getSavedTheme();
+      if (!saved) {
+        applyTheme(e.matches ? 'light' : 'dark');
+      }
+    });
+  }
 
   toggle.addEventListener('click', () => {
     const currentTheme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
     const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
-
     applyTheme(nextTheme);
     saveTheme(nextTheme);
   });
