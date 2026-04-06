@@ -304,6 +304,7 @@ function buildManifestEntry(assetId, relativeSourcePath, photoInfo) {
     return {
       ...baseEntry,
       kind: 'archive',
+      sourceName: path.basename(relativeSourcePath),
     };
   }
 

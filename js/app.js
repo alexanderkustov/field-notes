@@ -168,16 +168,32 @@ function createArchiveLayout(images) {
 
 function buildArchiveLayoutImages(images) {
   return images
-    .map((image, index) => {
-      const seed = hashString(`${image.viewSrc}|${image.width ?? 0}|${image.height ?? 0}|${index}`);
+    .map(image => {
+      const seed = hashString(`${getArchiveImageName(image)}|${image.viewSrc}|${image.width ?? 0}|${image.height ?? 0}`);
 
       return {
         image,
-        order: seed,
         variant: getArchiveCardVariant(image, seed),
       };
     })
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => compareArchiveImagesByNameDescending(a.image, b.image));
+}
+
+function compareArchiveImagesByNameDescending(leftImage, rightImage) {
+  const nameComparison = getArchiveImageName(rightImage).localeCompare(getArchiveImageName(leftImage), undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  });
+
+  if (nameComparison !== 0) {
+    return nameComparison;
+  }
+
+  return (rightImage.viewSrc ?? '').localeCompare(leftImage.viewSrc ?? '');
+}
+
+function getArchiveImageName(image) {
+  return image.sourceName ?? image.viewSrc ?? '';
 }
 
 function getArchiveCardVariant(image, seed) {
@@ -446,6 +462,7 @@ function initData() {
       thumbSrc,
       viewSrc: viewMap.get(entry.id) ?? thumbSrc,
       metadata: entry.metadata ?? null,
+      sourceName: entry.sourceName ?? null,
       width: Number.isFinite(entry.width) ? entry.width : null,
       height: Number.isFinite(entry.height) ? entry.height : null,
     };
