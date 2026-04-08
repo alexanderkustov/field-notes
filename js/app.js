@@ -113,7 +113,7 @@ function renderJournal({ entries, archive }) {
     }
 
     const row = document.createElement('div');
-    row.className = entry.kind === 'month' ? 'day-row day-row--undated' : 'day-row';
+    row.className = (entry.kind === 'month' || entry.kind === 'yearly-folder') ? 'day-row day-row--undated' : 'day-row';
 
     if (entry.kind === 'day') {
       const lbl = document.createElement('div');
@@ -507,6 +507,26 @@ function initData() {
       }
 
       journalEntries.get(monthlyKey).images.push(image);
+
+      continue;
+    }
+
+    if (entry.kind === 'yearly-folder' && entry.year && entry.folderName) {
+      const folderKey = `yearly-folder:${entry.year}-${entry.folderName}`;
+
+      if (!journalEntries.has(folderKey)) {
+        journalEntries.set(folderKey, {
+          kind: 'yearly-folder',
+          sortKey: `${entry.year}-00-00-${entry.folderName}`,
+          year: entry.year,
+          folderName: entry.folderName,
+          label: `${entry.folderName} ${entry.year}`,
+          monthLabel: `${entry.folderName.toUpperCase()} ${entry.year}`,
+          images: [],
+        });
+      }
+
+      journalEntries.get(folderKey).images.push(image);
 
       continue;
     }

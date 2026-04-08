@@ -300,6 +300,30 @@ function buildManifestEntry(assetId, relativeSourcePath, photoInfo) {
     };
   }
 
+  const yearlyFolderMatch = relativeSourcePath.match(/^(\d{4})\/([^/]+)\/.+$/);
+
+  if (yearlyFolderMatch) {
+    const [, year, folderName] = yearlyFolderMatch;
+    return {
+      ...baseEntry,
+      kind: 'yearly-folder',
+      year,
+      folderName,
+    };
+  }
+
+  const yearlyFileMatch = relativeSourcePath.match(/^(\d{4})\/[^/]+$/);
+
+  if (yearlyFileMatch) {
+    const [, year] = yearlyFileMatch;
+    return {
+      ...baseEntry,
+      kind: 'yearly-folder',
+      year,
+      folderName: 'misc',
+    };
+  }
+
   if (relativeSourcePath.startsWith(`${ARCHIVE_DIRECTORY}/`)) {
     return {
       ...baseEntry,

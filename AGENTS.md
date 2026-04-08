@@ -8,6 +8,7 @@ This repository is a small Vite-powered static photo journal.
 - `js/app.js` discovers images with `import.meta.glob(...)`, groups them by day, sorts dates descending, renders the journal, and handles the lightbox.
 - `style.css` contains the full visual system and interaction styling.
 - `data/YYYY/MM/DD/*` is the source content. New photos appear automatically when they follow this folder structure.
+- `data/` is a very image heavy folder, do not look into it for any code or process it, just assume it has images
 - `dist/` is generated build output, not the source of truth.
 
 ## Working Rules

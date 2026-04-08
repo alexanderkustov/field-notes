@@ -237,29 +237,59 @@ header {
   paint-order: stroke fill;
 }
 
-.month-label,
-.journal-section-label {
+.month-label {
   display: flex;
   align-items: center;
   padding: 22px 0 10px var(--label-w);
   position: relative;
 }
 
-.month-label span,
-.journal-section-label span {
+.month-label span {
   font-size: 0.58rem;
   letter-spacing: 0.22em;
   color: var(--muted);
   text-transform: uppercase;
 }
 
-.month-label::after,
-.journal-section-label::after {
+.month-label::after {
   content: '';
   flex: 1;
   margin-left: 16px;
   height: 1px;
   background: var(--line-strong);
+}
+
+.journal-section-label {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 44px 18px 18px var(--label-w);
+  margin-top: 18px;
+  overflow: hidden;
+}
+
+.journal-section-label::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: var(--label-w);
+  right: 18px;
+  height: 1px;
+  background: var(--header-frame);
+  opacity: 0.6;
+}
+
+.journal-section-label span {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.03em;
+  font-family: 'Archivo', sans-serif;
+  font-size: clamp(2.8rem, 8vw, 6rem);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: -0.09em;
+  color: var(--header-frame);
+  text-transform: uppercase;
 }
 
 /* ── Day row ── */
@@ -545,12 +575,14 @@ header {
     padding-right: 20px;
   }
 
-  .year-separator {
+  .year-separator,
+  .journal-section-label {
     padding-left: 20px;
     padding-right: 20px;
   }
 
-  .year-separator::before {
+  .year-separator::before,
+  .journal-section-label::before {
     left: 20px;
     right: 20px;
   }
@@ -626,18 +658,21 @@ header {
     padding: 0 16px 18px;
   }
 
-  .year-separator {
+  .year-separator,
+  .journal-section-label {
     padding: 28px 16px 14px;
     margin-top: 12px;
   }
 
-  .year-separator::before {
+  .year-separator::before,
+  .journal-section-label::before {
     top: 10px;
     left: 16px;
     right: 16px;
   }
 
-  .year-separator-value {
+  .year-separator-value,
+  .journal-section-label span {
     font-size: clamp(1.9rem, 16vw, 4rem);
   }
 
