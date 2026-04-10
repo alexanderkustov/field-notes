@@ -240,9 +240,13 @@ function createArchiveLayout(images, label = ARCHIVE_LABEL, sortByNameDescending
   return layout;
 }
 
-function createCollectionLayout(images, label) {
+function createCollectionLayout(images, label, options = {}) {
   const layout = document.createElement('div');
   layout.className = 'collection-grid';
+
+  if (options.masonry) {
+    layout.classList.add('collection-grid--masonry');
+  }
 
   images.forEach((image, idx) => {
     const lightboxIndex = registerLightboxItem(image, label);
@@ -264,8 +268,10 @@ function createCollectionLayout(images, label) {
 }
 
 function createCollectionPage(section, pageConfig) {
+  const useMasonryLayout = pageConfig.collection?.key === 'japan-2023';
+
   if (!pageConfig.collection?.groupBySubfolder) {
-    return createCollectionLayout(section.images, section.label);
+    return createCollectionLayout(section.images, section.label, { masonry: useMasonryLayout });
   }
 
   const page = document.createElement('div');
@@ -274,18 +280,18 @@ function createCollectionPage(section, pageConfig) {
   const groupedSections = Array.isArray(section.groups) ? section.groups : [];
 
   if (rootImages.length > 0) {
-    page.appendChild(createCollectionLayout(rootImages, section.label));
+    page.appendChild(createCollectionLayout(rootImages, section.label, { masonry: useMasonryLayout }));
   }
 
   groupedSections.forEach(group => {
     page.append(
       createCollectionGroupSeparator(group.label),
-      createCollectionLayout(group.images, `${section.label} · ${group.label}`)
+      createCollectionLayout(group.images, `${section.label} · ${group.label}`, { masonry: useMasonryLayout })
     );
   });
 
   if (page.childElementCount === 0) {
-    page.appendChild(createCollectionLayout(section.images, section.label));
+    page.appendChild(createCollectionLayout(section.images, section.label, { masonry: useMasonryLayout }));
   }
 
   return page;
@@ -308,6 +314,22 @@ function formatCollectionGroupLabel(value) {
     .replace(/[-_]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function compareCollectionGroupsAlphabetically(leftGroup, rightGroup) {
+  const labelComparison = leftGroup.label.localeCompare(rightGroup.label, undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  });
+
+  if (labelComparison !== 0) {
+    return labelComparison;
+  }
+
+  return leftGroup.key.localeCompare(rightGroup.key, undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  });
 }
 
 function buildArchiveLayoutImages(images, sortByNameDescending = true) {
@@ -706,7 +728,7 @@ function initData(pageConfig) {
     .map(section => ({
       ...section,
       rootImages: [...section.rootImages],
-      groups: Array.from(section.groups.values()),
+      groups: Array.from(section.groups.values()).sort(compareCollectionGroupsAlphabetically),
     }));
 
   if (pageConfig.page === 'collection' && pageConfig.collection) {

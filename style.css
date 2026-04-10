@@ -400,6 +400,12 @@ header {
   contain-intrinsic-size: 1200px;
 }
 
+.collection-grid--masonry {
+  display: block;
+  column-count: 4;
+  column-gap: 10px;
+}
+
 .collection-page > .collection-grid:first-child {
   border-top: none;
   padding-top: 0;
@@ -450,6 +456,18 @@ header {
   width: 100%;
   height: auto;
   min-width: 0;
+}
+
+.collection-grid--masonry .img-card {
+  display: block;
+  width: 100%;
+  margin: 0 0 10px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.collection-grid--masonry .img-card:last-child {
+  margin-bottom: 0;
 }
 
 .archive-card--panorama {
@@ -662,6 +680,10 @@ header {
     padding-right: 20px;
   }
 
+  .collection-grid--masonry {
+    column-count: 3;
+  }
+
   .date-label {
     padding-left: 20px;
   }
@@ -741,6 +763,11 @@ header {
     padding: 20px 16px 18px;
   }
 
+  .collection-grid--masonry {
+    column-count: 2;
+    column-gap: 12px;
+  }
+
   .year-separator,
   .journal-section-label {
     padding: 28px 16px 14px;
@@ -799,6 +826,10 @@ header {
     scroll-snap-align: start;
   }
 
+  .collection-grid .img-card {
+    height: auto;
+  }
+
   .lightbox-inner {
     width: min(100%, calc(100vw - 32px));
     padding-top: 28px;
@@ -852,6 +883,10 @@ header {
 
   .date-label {
     gap: 8px;
+  }
+
+  .collection-grid--masonry {
+    column-count: 1;
   }
 }
 

@@ -35,6 +35,7 @@ const stats = {
   skipped: 0,
   written: 0,
 };
+let activeProgressReporter = null;
 
 const manifestPath = path.join(outputDirectory, 'manifest.json');
 const generatedManifest = {
@@ -58,51 +59,63 @@ if (sourceFiles.length === 0) {
 }
 
 const expectedOutputs = new Set();
+const progressReporter = createProgressReporter(sourceFiles.length);
 
 expectedOutputs.add(manifestPath);
 
-for (const sourceFile of sourceFiles) {
-  const relativeSourcePath = toPosixPath(path.relative(dataDirectory, sourceFile));
-  const photoInfo = await readPhotoInfo(sourceFile);
-  const assetId = createGeneratedAssetId(relativeSourcePath);
-  const manifestEntry = buildManifestEntry(assetId, relativeSourcePath, photoInfo);
-  const targetDirectory = path.join(outputDirectory, path.dirname(assetId));
-  const targetBaseName = path.basename(assetId);
+logMessage('log', `Generating optimized images for ${sourceFiles.length} source image(s)...`);
 
-  generatedManifest.images.push(manifestEntry);
+activeProgressReporter = progressReporter;
 
-  await fs.mkdir(targetDirectory, { recursive: true });
+try {
+  for (const [index, sourceFile] of sourceFiles.entries()) {
+    const relativeSourcePath = toPosixPath(path.relative(dataDirectory, sourceFile));
+    progressReporter.update(index + 1, relativeSourcePath, stats);
 
-  for (const variant of VARIANTS) {
-    const outputPath = path.join(targetDirectory, `${targetBaseName}${variant.suffix}`);
-    expectedOutputs.add(outputPath);
+    const photoInfo = await readPhotoInfo(sourceFile);
+    const assetId = createGeneratedAssetId(relativeSourcePath);
+    const manifestEntry = buildManifestEntry(assetId, relativeSourcePath, photoInfo);
+    const targetDirectory = path.join(outputDirectory, path.dirname(assetId));
+    const targetBaseName = path.basename(assetId);
 
-    if (!(await shouldGenerate(sourceFile, outputPath))) {
-      stats.skipped += 1;
-      continue;
-    }
+    generatedManifest.images.push(manifestEntry);
 
-    try {
-      await sharp(sourceFile, { failOn: 'none' })
-        .rotate()
-        .resize({
-          width: variant.size,
-          height: variant.size,
-          fit: 'inside',
-          withoutEnlargement: true,
-        })
-        .webp({
-          quality: variant.quality,
-          effort: 6,
-        })
-        .toFile(outputPath);
+    await fs.mkdir(targetDirectory, { recursive: true });
 
-      stats.written += 1;
-    } catch (error) {
-      stats.failed += 1;
-      console.error(`Failed to optimize ${relativeSourcePath}:`, error.message);
+    for (const variant of VARIANTS) {
+      const outputPath = path.join(targetDirectory, `${targetBaseName}${variant.suffix}`);
+      expectedOutputs.add(outputPath);
+
+      if (!(await shouldGenerate(sourceFile, outputPath))) {
+        stats.skipped += 1;
+        continue;
+      }
+
+      try {
+        await sharp(sourceFile, { failOn: 'none' })
+          .rotate()
+          .resize({
+            width: variant.size,
+            height: variant.size,
+            fit: 'inside',
+            withoutEnlargement: true,
+          })
+          .webp({
+            quality: variant.quality,
+            effort: 6,
+          })
+          .toFile(outputPath);
+
+        stats.written += 1;
+      } catch (error) {
+        stats.failed += 1;
+        logMessage('error', `Failed to optimize ${relativeSourcePath}:`, error.message);
+      }
     }
   }
+} finally {
+  progressReporter.finish();
+  activeProgressReporter = null;
 }
 
 await removeStaleOutputs(outputDirectory, expectedOutputs);
@@ -158,6 +171,90 @@ async function pathExists(targetPath) {
   } catch {
     return false;
   }
+}
+
+function createProgressReporter(totalFiles) {
+  const isInteractive = Boolean(process.stdout.isTTY);
+  const stepInterval = 10;
+  const timeIntervalMs = 5000;
+  let currentMessage = '';
+  let lastLoggedIndex = 0;
+  let lastLoggedAt = 0;
+
+  return {
+    update(currentIndex, relativeSourcePath, currentStats) {
+      currentMessage = formatProgressMessage(totalFiles, currentIndex, relativeSourcePath, currentStats);
+
+      if (isInteractive) {
+        process.stdout.write(renderProgressLine(currentMessage));
+        return;
+      }
+
+      const now = Date.now();
+      const shouldLog = (
+        currentIndex === 1
+        || currentIndex === totalFiles
+        || currentIndex - lastLoggedIndex >= stepInterval
+        || now - lastLoggedAt >= timeIntervalMs
+      );
+
+      if (!shouldLog) {
+        return;
+      }
+
+      console.log(currentMessage);
+      lastLoggedIndex = currentIndex;
+      lastLoggedAt = now;
+    },
+
+    beforeLog() {
+      if (!currentMessage || !isInteractive) {
+        return;
+      }
+
+      process.stdout.write('\n');
+    },
+
+    afterLog() {
+      if (!currentMessage || !isInteractive) {
+        return;
+      }
+
+      process.stdout.write(renderProgressLine(currentMessage));
+    },
+
+    finish() {
+      if (!currentMessage || !isInteractive) {
+        return;
+      }
+
+      process.stdout.write('\n');
+      currentMessage = '';
+    },
+  };
+}
+
+function formatProgressMessage(totalFiles, currentIndex, relativeSourcePath, currentStats) {
+  const progressPercent = Math.min(100, Math.max(1, Math.round((currentIndex / totalFiles) * 100)));
+
+  return [
+    `[${currentIndex}/${totalFiles}]`,
+    `${progressPercent}%`,
+    relativeSourcePath,
+    `written:${currentStats.written}`,
+    `skipped:${currentStats.skipped}`,
+    `failed:${currentStats.failed}`,
+  ].join(' · ');
+}
+
+function renderProgressLine(message) {
+  return `\r\x1b[2K${message}`;
+}
+
+function logMessage(method, ...parts) {
+  activeProgressReporter?.beforeLog();
+  console[method](...parts);
+  activeProgressReporter?.afterLog();
 }
 
 async function shouldGenerate(sourcePath, outputPath) {
@@ -228,7 +325,7 @@ async function readPhotoMetadata(sourcePath) {
       ],
     });
   } catch (error) {
-    console.warn(`Skipping EXIF metadata for ${toPosixPath(path.relative(dataDirectory, sourcePath))}: ${error.message}`);
+    logMessage('warn', `Skipping EXIF metadata for ${toPosixPath(path.relative(dataDirectory, sourcePath))}: ${error.message}`);
     return null;
   }
 
@@ -280,7 +377,7 @@ async function readPhotoDimensions(sourcePath) {
       };
     }
   } catch (error) {
-    console.warn(`Skipping image dimensions for ${toPosixPath(path.relative(dataDirectory, sourcePath))}: ${error.message}`);
+    logMessage('warn', `Skipping image dimensions for ${toPosixPath(path.relative(dataDirectory, sourcePath))}: ${error.message}`);
   }
 
   return null;
