@@ -10,6 +10,7 @@ const rootDirectory = path.resolve(scriptDirectory, '..');
 const dataDirectory = path.join(rootDirectory, 'data');
 const outputDirectory = path.join(dataDirectory, '.generated', 'v1');
 const ARCHIVE_DIRECTORY = 'archive';
+const SPECIAL_COLLECTION_DIRECTORIES = new Set(['portraits', 'japan-2023']);
 
 const SOURCE_EXTENSIONS = new Set([
   '.jpg',
@@ -26,6 +27,7 @@ const VARIANTS = [
   { suffix: '--thumb.webp', size: 720, quality: 68 },
   { suffix: '--view.webp', size: 1800, quality: 82 },
 ];
+const MANIFEST_VERSION = 5;
 
 const stats = {
   failed: 0,
@@ -34,15 +36,28 @@ const stats = {
   written: 0,
 };
 
+const manifestPath = path.join(outputDirectory, 'manifest.json');
+const generatedManifest = {
+  version: MANIFEST_VERSION,
+  images: [],
+};
+
 await fs.mkdir(outputDirectory, { recursive: true });
 
 const sourceFiles = await collectSourceFiles(dataDirectory);
+
+if (sourceFiles.length === 0) {
+  if (await pathExists(manifestPath)) {
+    console.log('No source images found. Keeping existing generated assets.');
+    process.exit(0);
+  }
+
+  await fs.writeFile(manifestPath, `${JSON.stringify(generatedManifest, null, 2)}\n`);
+  console.log('No source images found. Wrote an empty generated manifest.');
+  process.exit(0);
+}
+
 const expectedOutputs = new Set();
-const generatedManifest = {
-  version: 3,
-  images: [],
-};
-const manifestPath = path.join(outputDirectory, 'manifest.json');
 
 expectedOutputs.add(manifestPath);
 
@@ -102,7 +117,18 @@ if (stats.failed > 0) {
 }
 
 async function collectSourceFiles(directory) {
-  const entries = await fs.readdir(directory, { withFileTypes: true });
+  let entries;
+
+  try {
+    entries = await fs.readdir(directory, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+
+    throw error;
+  }
+
   const files = [];
 
   for (const entry of entries) {
@@ -123,6 +149,15 @@ async function collectSourceFiles(directory) {
   }
 
   return files.sort();
+}
+
+async function pathExists(targetPath) {
+  try {
+    await fs.access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function shouldGenerate(sourcePath, outputPath) {
@@ -330,6 +365,24 @@ function buildManifestEntry(assetId, relativeSourcePath, photoInfo) {
       kind: 'archive',
       sourceName: path.basename(relativeSourcePath),
     };
+  }
+
+  const collectionMatch = relativeSourcePath.match(/^([^/]+)\/.+$/);
+
+  if (collectionMatch) {
+    const [, collection] = collectionMatch;
+
+    if (SPECIAL_COLLECTION_DIRECTORIES.has(collection)) {
+      const sourceName = relativeSourcePath.slice(collection.length + 1);
+      const collectionGroupMatch = sourceName.match(/^([^/]+)\/.+$/);
+      return {
+        ...baseEntry,
+        kind: 'collection',
+        collection,
+        sourceName,
+        ...(collectionGroupMatch ? { collectionGroup: collectionGroupMatch[1] } : {}),
+      };
+    }
   }
 
   return baseEntry;

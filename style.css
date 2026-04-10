@@ -111,6 +111,7 @@ header {
   letter-spacing: -0.09em;
   text-transform: uppercase;
   color: var(--header-frame);
+  text-decoration: none;
 }
 
 .site-name span {
@@ -122,6 +123,40 @@ header {
   color: transparent;
   -webkit-text-stroke: 1px var(--header-frame);
   paint-order: stroke fill;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 0;
+}
+
+.site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line-mid);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.46rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.site-nav-link:hover,
+.site-nav-link:focus-visible,
+.site-nav-link.is-active {
+  border-color: var(--header-frame);
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.site-nav-link:focus-visible {
+  outline: none;
 }
 
 .header-tools {
@@ -187,7 +222,7 @@ header {
 }
 
 .header-meta:empty::before {
-  content: 'Loading archive index';
+  content: attr(data-loading-label);
 }
 
 /* ── Month separator ── */
@@ -354,6 +389,26 @@ header {
   contain-intrinsic-size: 520px;
 }
 
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 28px 18px 24px var(--label-w);
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  content-visibility: auto;
+  contain-intrinsic-size: 1200px;
+}
+
+.collection-page > .collection-grid:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.collection-page > .collection-group-separator:first-child {
+  margin-top: 0;
+}
+
 /* scrollable images strip */
 .images-strip {
   display: flex;
@@ -389,6 +444,12 @@ header {
 
 .archive-layout .img-card {
   height: var(--archive-card-h, var(--archive-card-standard-h));
+}
+
+.collection-grid .img-card {
+  width: 100%;
+  height: auto;
+  min-width: 0;
 }
 
 .archive-card--panorama {
@@ -596,6 +657,11 @@ header {
     padding-right: 20px;
   }
 
+  .collection-grid {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
   .date-label {
     padding-left: 20px;
   }
@@ -642,6 +708,17 @@ header {
     font-size: clamp(1.35rem, 8vw, 2.1rem);
   }
 
+  .site-nav {
+    gap: 6px;
+    padding-top: 6px;
+  }
+
+  .site-nav-link {
+    min-height: 24px;
+    padding: 0 8px;
+    letter-spacing: 0.1em;
+  }
+
   .header-meta {
     min-width: 0;
     min-height: 32px;
@@ -656,6 +733,12 @@ header {
   .archive-layout {
     gap: 8px;
     padding: 0 16px 18px;
+  }
+
+  .collection-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 20px 16px 18px;
   }
 
   .year-separator,

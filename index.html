@@ -39,18 +39,23 @@
 </script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="home">
 
 <header>
   <div class="site-brand">
-    <span class="site-name">
+    <a class="site-name" href="./">
       <span>photographic</span>
       <span>reflexes</span>
-    </span>
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <a class="site-nav-link is-active" href="./">journal</a>
+      <a class="site-nav-link" href="./portraits/">portraits</a>
+      <a class="site-nav-link" href="./japan-2023/">japan 2023</a>
+    </nav>
   </div>
   <div class="header-tools">
     <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">light</button>
-    <span class="header-meta"></span>
+    <span class="header-meta" data-loading-label="Loading journal"></span>
   </div>
 </header>
 

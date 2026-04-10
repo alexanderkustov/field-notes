@@ -1,4 +1,6 @@
 .DS_Store
-data/.generated/
+data/*
+!data/.generated/
+!data/.generated/**
 dist/
 node_modules/

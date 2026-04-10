@@ -1,9 +1,18 @@
 import generatedManifest from '../data/.generated/v1/manifest.json';
 
 const THEME_STORAGE_KEY = 'field-notes-theme';
-const ARCHIVE_DIRECTORY = 'archive';
 const ARCHIVE_LABEL = 'Archive';
 const PRIORITY_IMAGE_COUNT = 2;
+const SPECIAL_COLLECTIONS = [
+  { key: 'portraits', label: 'Portraits', summaryNoun: 'portrait' },
+  {
+    key: 'japan-2023',
+    label: 'Japan 2023',
+    navLabel: 'japan 2023',
+    summaryNoun: 'japan photo',
+    groupBySubfolder: true,
+  },
+];
 
 let journalImageObserver;
 let lightboxItems = [];
@@ -77,18 +86,33 @@ function initThemeToggle() {
 }
 
 /* ── Render Journal ── */
-function renderJournal({ entries, archive }) {
+function renderJournal({ entries, sections, archive }, pageConfig) {
   const journal = document.getElementById('journal');
   journal.replaceChildren();
   lightboxItems = [];
   activeLightboxIndex = -1;
+  const populatedSections = Array.isArray(sections) ? sections.filter(section => section.images.length > 0) : [];
 
-  if ((!entries || entries.length === 0) && (!archive || archive.images.length === 0)) {
-    journal.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--muted);">No images found in the data folder.</div>';
+  if (
+    (!entries || entries.length === 0)
+    && populatedSections.length === 0
+    && (!archive || archive.images.length === 0)
+  ) {
+    journal.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--muted);">${pageConfig.emptyMessage}</div>`;
     return;
   }
 
-  updateHeaderMeta(entries, archive.images.length);
+  updateHeaderMeta(entries, archive.images.length, populatedSections);
+
+  if (pageConfig.page === 'collection') {
+    const section = populatedSections[0];
+
+    if (section) {
+      journal.appendChild(createCollectionPage(section, pageConfig));
+    }
+
+    return;
+  }
 
   let lastYear = '';
   let lastMonth = '';
@@ -135,13 +159,42 @@ function renderJournal({ entries, archive }) {
     journal.appendChild(row);
   });
 
+  populatedSections.forEach(section => {
+    journal.appendChild(createSectionLabel(section.label));
+    journal.appendChild(createArchiveLayout(section.images, section.label, false));
+  });
+
   if (archive.images.length > 0) {
-    const sectionLabel = document.createElement('div');
-    sectionLabel.className = 'journal-section-label';
-    sectionLabel.innerHTML = `<span>${ARCHIVE_LABEL}</span>`;
-    journal.appendChild(sectionLabel);
-    journal.appendChild(createArchiveLayout(archive.images));
+    journal.appendChild(createSectionLabel(ARCHIVE_LABEL));
+    journal.appendChild(createArchiveLayout(archive.images, ARCHIVE_LABEL, true));
   }
+}
+
+function createSectionLabel(label) {
+  const sectionLabel = document.createElement('div');
+  sectionLabel.className = 'journal-section-label';
+  sectionLabel.innerHTML = `<span>${label}</span>`;
+  return sectionLabel;
+}
+
+function getPageConfig() {
+  const page = document.body?.dataset.page === 'collection' ? 'collection' : 'home';
+  const collectionKey = document.body?.dataset.collection ?? '';
+  const collection = SPECIAL_COLLECTIONS.find(entry => entry.key === collectionKey) ?? null;
+
+  if (page === 'collection' && collection) {
+    return {
+      page,
+      collection,
+      emptyMessage: `No images found in ${collection.label.toLowerCase()}.`,
+    };
+  }
+
+  return {
+    page: 'home',
+    collection: null,
+    emptyMessage: 'No images found in the data folder.',
+  };
 }
 
 function createYearSeparator(year) {
@@ -164,13 +217,13 @@ function createYearSeparator(year) {
   return separator;
 }
 
-function createArchiveLayout(images) {
+function createArchiveLayout(images, label = ARCHIVE_LABEL, sortByNameDescending = true) {
   const layout = document.createElement('div');
   layout.className = 'archive-layout';
 
-  buildArchiveLayoutImages(images).forEach(({ image, variant }, idx) => {
-    const lightboxIndex = registerLightboxItem(image, ARCHIVE_LABEL);
-    const card = createImageCard(image, ARCHIVE_LABEL, false, idx, lightboxIndex);
+  buildArchiveLayoutImages(images, sortByNameDescending).forEach(({ image, variant }, idx) => {
+    const lightboxIndex = registerLightboxItem(image, label);
+    const card = createImageCard(image, label, false, idx, lightboxIndex);
     card.classList.add('archive-card', variant);
     layout.appendChild(card);
   });
@@ -187,17 +240,91 @@ function createArchiveLayout(images) {
   return layout;
 }
 
-function buildArchiveLayoutImages(images) {
-  return images
-    .map(image => {
-      const seed = hashString(`${getArchiveImageName(image)}|${image.viewSrc}|${image.width ?? 0}|${image.height ?? 0}`);
+function createCollectionLayout(images, label) {
+  const layout = document.createElement('div');
+  layout.className = 'collection-grid';
 
-      return {
-        image,
-        variant: getArchiveCardVariant(image, seed),
-      };
-    })
-    .sort((a, b) => compareArchiveImagesByNameDescending(a.image, b.image));
+  images.forEach((image, idx) => {
+    const lightboxIndex = registerLightboxItem(image, label);
+    const card = createImageCard(image, label, idx < PRIORITY_IMAGE_COUNT, idx, lightboxIndex);
+    card.classList.add('collection-card');
+    layout.appendChild(card);
+  });
+
+  layout.addEventListener('click', event => {
+    const card = event.target.closest('.img-card');
+    if (!card || !layout.contains(card)) {
+      return;
+    }
+
+    openLightbox(Number(card.dataset.lightboxIndex));
+  });
+
+  return layout;
+}
+
+function createCollectionPage(section, pageConfig) {
+  if (!pageConfig.collection?.groupBySubfolder) {
+    return createCollectionLayout(section.images, section.label);
+  }
+
+  const page = document.createElement('div');
+  page.className = 'collection-page';
+  const rootImages = Array.isArray(section.rootImages) ? section.rootImages : [];
+  const groupedSections = Array.isArray(section.groups) ? section.groups : [];
+
+  if (rootImages.length > 0) {
+    page.appendChild(createCollectionLayout(rootImages, section.label));
+  }
+
+  groupedSections.forEach(group => {
+    page.append(
+      createCollectionGroupSeparator(group.label),
+      createCollectionLayout(group.images, `${section.label} · ${group.label}`)
+    );
+  });
+
+  if (page.childElementCount === 0) {
+    page.appendChild(createCollectionLayout(section.images, section.label));
+  }
+
+  return page;
+}
+
+function createCollectionGroupSeparator(label) {
+  const separator = document.createElement('div');
+  separator.className = 'year-separator collection-group-separator';
+
+  const value = document.createElement('div');
+  value.className = 'year-separator-value collection-group-value';
+  value.textContent = label;
+
+  separator.appendChild(value);
+  return separator;
+}
+
+function formatCollectionGroupLabel(value) {
+  return String(value)
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildArchiveLayoutImages(images, sortByNameDescending = true) {
+  const layoutImages = images.map(image => {
+    const seed = hashString(`${getArchiveImageName(image)}|${image.viewSrc}|${image.width ?? 0}|${image.height ?? 0}`);
+
+    return {
+      image,
+      variant: getArchiveCardVariant(image, seed),
+    };
+  });
+
+  if (sortByNameDescending) {
+    layoutImages.sort((a, b) => compareArchiveImagesByNameDescending(a.image, b.image));
+  }
+
+  return layoutImages;
 }
 
 function compareArchiveImagesByNameDescending(leftImage, rightImage) {
@@ -344,7 +471,7 @@ function getJournalImageObserver() {
   return journalImageObserver;
 }
 
-function updateHeaderMeta(entries, archiveImageCount) {
+function updateHeaderMeta(entries, archiveImageCount, sections = []) {
   const metaElem = document.querySelector('.header-meta');
   if (!metaElem) return;
 
@@ -362,11 +489,19 @@ function updateHeaderMeta(entries, archiveImageCount) {
     }
   }
 
+  sections.forEach(section => {
+    segments.push(formatCountLabel(section.images.length, section.summaryNoun));
+  });
+
   if (archiveImageCount > 0) {
     segments.push(`${archiveImageCount} archive photo${archiveImageCount !== 1 ? 's' : ''}`);
   }
 
   metaElem.textContent = segments.join(' · ');
+}
+
+function formatCountLabel(count, singularNoun) {
+  return `${count} ${singularNoun}${count !== 1 ? 's' : ''}`;
 }
 
 /* ── Lightbox ── */
@@ -454,12 +589,20 @@ document.addEventListener('keydown', e => {
 });
 
 /* ── Build data using Vite's import.meta.glob ── */
-function initData() {
+function initData(pageConfig) {
   // Discover optimized image derivatives while preserving the date-based folder flow.
   const thumbs = import.meta.glob('../data/.generated/v1/**/*--thumb.webp', { eager: true, import: 'default' });
   const views = import.meta.glob('../data/.generated/v1/**/*--view.webp', { eager: true, import: 'default' });
   const journalEntries = new Map();
   const archiveImages = [];
+  const specialSections = new Map(
+    SPECIAL_COLLECTIONS.map(section => [section.key, {
+      ...section,
+      images: [],
+      rootImages: [],
+      groups: new Map(),
+    }])
+  );
   const thumbMap = new Map();
   const viewMap = new Map();
 
@@ -533,12 +676,53 @@ function initData() {
 
     if (entry.kind === 'archive') {
       archiveImages.push(image);
+      continue;
+    }
+
+    if (entry.kind === 'collection' && entry.collection && specialSections.has(entry.collection)) {
+      const collection = specialSections.get(entry.collection);
+      collection.images.push(image);
+
+      if (collection.groupBySubfolder && entry.collectionGroup) {
+        if (!collection.groups.has(entry.collectionGroup)) {
+          collection.groups.set(entry.collectionGroup, {
+            key: entry.collectionGroup,
+            label: formatCollectionGroupLabel(entry.collectionGroup),
+            images: [],
+          });
+        }
+
+        collection.groups.get(entry.collectionGroup).images.push(image);
+      } else {
+        collection.rootImages.push(image);
+      }
     }
   }
 
   const sortedEntries = Array.from(journalEntries.values()).sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+  const allSections = SPECIAL_COLLECTIONS
+    .map(section => specialSections.get(section.key))
+    .filter(section => section && section.images.length > 0)
+    .map(section => ({
+      ...section,
+      rootImages: [...section.rootImages],
+      groups: Array.from(section.groups.values()),
+    }));
+
+  if (pageConfig.page === 'collection' && pageConfig.collection) {
+    return {
+      entries: [],
+      sections: allSections.filter(section => section.key === pageConfig.collection.key),
+      archive: {
+        label: ARCHIVE_LABEL,
+        images: [],
+      }
+    };
+  }
+
   return {
     entries: sortedEntries,
+    sections: [],
     archive: {
       label: ARCHIVE_LABEL,
       images: archiveImages
@@ -758,8 +942,9 @@ function setupImageStripInteractions(strip) {
 document.addEventListener('DOMContentLoaded', () => {
   initThemeToggle();
 
-  const finalData = initData();
-  renderJournal(finalData);
+  const pageConfig = getPageConfig();
+  const finalData = initData(pageConfig);
+  renderJournal(finalData, pageConfig);
 
   document.querySelectorAll('.images-strip').forEach(strip => {
     setupImageStripInteractions(strip);
