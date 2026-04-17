@@ -60,6 +60,15 @@ html, body {
   overflow-x: hidden;
 }
 
+body[data-page="home"] {
+  --row-h: 263px;
+  --gap: 4px;
+  --archive-card-panorama-h: 124px;
+  --archive-card-compact-h: 170px;
+  --archive-card-standard-h: 227px;
+  --archive-card-feature-h: 289px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -402,6 +411,10 @@ header {
   contain-intrinsic-size: 520px;
 }
 
+body[data-page="home"] .archive-layout {
+  gap: 8px;
+}
+
 .collection-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -524,6 +537,8 @@ header {
   position: fixed;
   inset: 0;
   z-index: 900;
+  --lightbox-photo-border: transparent;
+  --lightbox-photo-shadow: none;
   background: var(--overlay);
   display: flex;
   align-items: center;
@@ -531,6 +546,16 @@ header {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
+}
+
+.lightbox[data-image-tone="dark"] {
+  --lightbox-photo-border: rgba(243, 238, 228, 0.92);
+  --lightbox-photo-shadow: 0 18px 72px rgba(0, 0, 0, 0.42);
+}
+
+.lightbox[data-image-tone="light"] {
+  --lightbox-photo-border: rgba(14, 13, 11, 0.82);
+  --lightbox-photo-shadow: 0 18px 72px rgba(0, 0, 0, 0.28);
 }
 
 .lightbox.active { opacity: 1; pointer-events: all; }
@@ -548,7 +573,10 @@ header {
   max-height: 80vh;
   width: auto;
   height: auto;
+  border: 5px solid var(--lightbox-photo-border);
+  box-shadow: var(--lightbox-photo-shadow);
   display: block;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .lightbox-meta {
@@ -661,6 +689,15 @@ header {
     --archive-card-feature-h: 188px;
   }
 
+  body[data-page="home"] {
+    --row-h: 243px;
+    --gap: 4px;
+    --archive-card-panorama-h: 113px;
+    --archive-card-compact-h: 151px;
+    --archive-card-standard-h: 197px;
+    --archive-card-feature-h: 254px;
+  }
+
   header {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
     padding-left: 20px;
@@ -716,6 +753,15 @@ header {
     --archive-card-feature-h: 160px;
   }
 
+  body[data-page="home"] {
+    --row-h: clamp(297px, 76vw, 432px);
+    --gap: 12px;
+    --archive-card-panorama-h: 97px;
+    --archive-card-compact-h: 124px;
+    --archive-card-standard-h: 165px;
+    --archive-card-feature-h: 216px;
+  }
+
   header {
     grid-template-columns: 1fr;
     gap: 4px;
@@ -768,6 +814,10 @@ header {
   .archive-layout {
     gap: 8px;
     padding: 0 16px 18px;
+  }
+
+  body[data-page="home"] .archive-layout {
+    gap: 11px;
   }
 
   .collection-grid {
@@ -887,6 +937,10 @@ header {
 @media (max-width: 480px) {
   :root {
     --row-h: clamp(200px, 62vw, 280px);
+  }
+
+  body[data-page="home"] {
+    --row-h: clamp(270px, 84vw, 378px);
   }
 
   .site-name {

@@ -1,0 +1,6 @@
+# Hide source images from the generated site without deleting local originals.
+# Paths are relative to data/. Use one file path per line.
+#
+# Examples:
+# 2026/04/05/R0000040-2.jpg
+# 2026/04/05/

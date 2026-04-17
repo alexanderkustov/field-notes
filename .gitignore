@@ -1,5 +1,6 @@
 .DS_Store
 data/*
+!data/excluded-images.txt
 !data/.generated/
 !data/.generated/**
 dist/

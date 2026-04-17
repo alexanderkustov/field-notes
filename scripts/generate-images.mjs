@@ -9,6 +9,7 @@ const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const rootDirectory = path.resolve(scriptDirectory, '..');
 const dataDirectory = path.join(rootDirectory, 'data');
 const outputDirectory = path.join(dataDirectory, '.generated', 'v1');
+const excludedImagesPath = path.join(dataDirectory, 'excluded-images.txt');
 const ARCHIVE_DIRECTORY = 'archive';
 const SPECIAL_COLLECTION_DIRECTORIES = new Set(['portraits', 'japan-2023']);
 
@@ -45,9 +46,14 @@ const generatedManifest = {
 
 await fs.mkdir(outputDirectory, { recursive: true });
 
-const sourceFiles = await collectSourceFiles(dataDirectory);
+const excludedSourcePaths = await readExcludedSourcePaths(excludedImagesPath);
+const discoveredSourceFiles = await collectSourceFiles(dataDirectory);
+const sourceFiles = discoveredSourceFiles.filter(sourceFile => {
+  const relativeSourcePath = toPosixPath(path.relative(dataDirectory, sourceFile));
+  return !isExcludedSourcePath(relativeSourcePath, excludedSourcePaths);
+});
 
-if (sourceFiles.length === 0) {
+if (discoveredSourceFiles.length === 0) {
   if (await pathExists(manifestPath)) {
     console.log('No source images found. Keeping existing generated assets.');
     process.exit(0);
@@ -58,10 +64,26 @@ if (sourceFiles.length === 0) {
   process.exit(0);
 }
 
+const excludedSourceCount = discoveredSourceFiles.length - sourceFiles.length;
+
+if (excludedSourceCount > 0) {
+  console.log(`Skipped ${excludedSourceCount} excluded source image(s) from data/excluded-images.txt.`);
+}
+
 const expectedOutputs = new Set();
-const progressReporter = createProgressReporter(sourceFiles.length);
 
 expectedOutputs.add(manifestPath);
+
+if (sourceFiles.length === 0) {
+  await removeStaleOutputs(outputDirectory, expectedOutputs);
+  await fs.writeFile(manifestPath, `${JSON.stringify(generatedManifest, null, 2)}\n`);
+  console.log(
+    `Optimized 0 source image(s): ${stats.written} written, ${stats.skipped} skipped, ${stats.removed} removed, ${stats.failed} failed.`,
+  );
+  process.exit(0);
+}
+
+const progressReporter = createProgressReporter(sourceFiles.length);
 
 logMessage('log', `Generating optimized images for ${sourceFiles.length} source image(s)...`);
 
@@ -162,6 +184,59 @@ async function collectSourceFiles(directory) {
   }
 
   return files.sort();
+}
+
+async function readExcludedSourcePaths(filePath) {
+  let content = '';
+
+  try {
+    content = await fs.readFile(filePath, 'utf8');
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return {
+        directories: [],
+        files: new Set(),
+      };
+    }
+
+    throw error;
+  }
+
+  const directories = [];
+  const files = new Set();
+
+  content.split(/\r?\n/).forEach(line => {
+    const value = normalizeExcludedSourcePath(line);
+
+    if (!value || value.startsWith('#')) {
+      return;
+    }
+
+    if (value.endsWith('/')) {
+      directories.push(value);
+    } else {
+      files.add(value);
+    }
+  });
+
+  return {
+    directories,
+    files,
+  };
+}
+
+function normalizeExcludedSourcePath(value) {
+  return String(value)
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/^\/+/, '');
+}
+
+function isExcludedSourcePath(relativeSourcePath, excludedSourcePaths) {
+  return (
+    excludedSourcePaths.files.has(relativeSourcePath)
+    || excludedSourcePaths.directories.some(directory => relativeSourcePath.startsWith(directory))
+  );
 }
 
 async function pathExists(targetPath) {

@@ -3,6 +3,8 @@ import generatedManifest from '../data/.generated/v1/manifest.json';
 const THEME_STORAGE_KEY = 'field-notes-theme';
 const ARCHIVE_LABEL = 'Archive';
 const PRIORITY_IMAGE_COUNT = 2;
+const HOME_PREVIEW_ASPECT_RATIO = '4 / 5';
+const LIGHTBOX_TONE_SAMPLE_SIZE = 16;
 const SPECIAL_COLLECTIONS = [
   { key: 'portraits', label: 'Portraits', summaryNoun: 'portrait' },
   {
@@ -17,6 +19,8 @@ const SPECIAL_COLLECTIONS = [
 let journalImageObserver;
 let lightboxItems = [];
 let activeLightboxIndex = -1;
+let activeLightboxToneRequest = 0;
+const lightboxToneCache = new Map();
 
 function getSavedTheme() {
   try {
@@ -152,7 +156,9 @@ function renderJournal({ entries, sections, archive }, pageConfig) {
     entry.images.forEach((image, idx) => {
       const prioritizeImage = di === 0 && idx < PRIORITY_IMAGE_COUNT;
       const lightboxIndex = registerLightboxItem(image, entry.label);
-      strip.appendChild(createImageCard(image, entry.label, prioritizeImage, idx, lightboxIndex));
+      strip.appendChild(createImageCard(image, entry.label, prioritizeImage, idx, lightboxIndex, {
+        previewAspectRatio: HOME_PREVIEW_ASPECT_RATIO,
+      }));
     });
 
     row.appendChild(strip);
@@ -166,7 +172,9 @@ function renderJournal({ entries, sections, archive }, pageConfig) {
 
   if (archive.images.length > 0) {
     journal.appendChild(createSectionLabel(ARCHIVE_LABEL));
-    journal.appendChild(createArchiveLayout(archive.images, ARCHIVE_LABEL, true));
+    journal.appendChild(createArchiveLayout(archive.images, ARCHIVE_LABEL, true, {
+      previewAspectRatio: HOME_PREVIEW_ASPECT_RATIO,
+    }));
   }
 }
 
@@ -217,13 +225,15 @@ function createYearSeparator(year) {
   return separator;
 }
 
-function createArchiveLayout(images, label = ARCHIVE_LABEL, sortByNameDescending = true) {
+function createArchiveLayout(images, label = ARCHIVE_LABEL, sortByNameDescending = true, options = {}) {
   const layout = document.createElement('div');
   layout.className = 'archive-layout';
 
   buildArchiveLayoutImages(images, sortByNameDescending).forEach(({ image, variant }, idx) => {
     const lightboxIndex = registerLightboxItem(image, label);
-    const card = createImageCard(image, label, false, idx, lightboxIndex);
+    const card = createImageCard(image, label, false, idx, lightboxIndex, {
+      previewAspectRatio: options.previewAspectRatio,
+    });
     card.classList.add('archive-card', variant);
     layout.appendChild(card);
   });
@@ -404,7 +414,7 @@ function registerLightboxItem(image, label) {
   }) - 1;
 }
 
-function createImageCard(image, label, prioritizeImage, index, lightboxIndex) {
+function createImageCard(image, label, prioritizeImage, index, lightboxIndex, options = {}) {
   const card = document.createElement('div');
   card.className = 'img-card';
   card.dataset.date = label;
@@ -412,7 +422,9 @@ function createImageCard(image, label, prioritizeImage, index, lightboxIndex) {
   card.style.animationDelay = `${index * 0.07}s`;
   const hasDimensions = Number.isFinite(image.width) && Number.isFinite(image.height) && image.width > 0 && image.height > 0;
 
-  if (hasDimensions) {
+  if (options.previewAspectRatio) {
+    card.style.aspectRatio = options.previewAspectRatio;
+  } else if (hasDimensions) {
     card.style.aspectRatio = `${image.width} / ${image.height}`;
   }
 
@@ -548,18 +560,95 @@ function closeLightbox() {
   lightbox.classList.remove('active');
   setLightboxExifExpanded(false);
   activeLightboxIndex = -1;
+  activeLightboxToneRequest += 1;
+  lightbox.dataset.imageTone = 'pending';
 }
 
 function renderLightboxItem(item) {
+  const toneRequestId = activeLightboxToneRequest + 1;
+  activeLightboxToneRequest = toneRequestId;
+
   const image = document.createElement('img');
   image.src = item.src;
   image.alt = `Photo on ${item.label}`;
   image.loading = 'eager';
   image.decoding = 'async';
 
+  const cachedTone = lightboxToneCache.get(item.src);
+  lightbox.dataset.imageTone = cachedTone ?? 'pending';
+
+  if (!cachedTone) {
+    const updateTone = () => updateLightboxImageTone(image, item.src, toneRequestId);
+
+    if (image.complete && image.naturalWidth > 0) {
+      requestAnimationFrame(updateTone);
+    } else {
+      image.addEventListener('load', updateTone, { once: true });
+      image.addEventListener('error', () => {
+        if (toneRequestId === activeLightboxToneRequest) {
+          lightbox.dataset.imageTone = 'pending';
+        }
+      }, { once: true });
+    }
+  }
+
   lightboxWrap.replaceChildren(image);
   lightboxMeta.textContent = item.label;
   renderExifDetails(lightboxExif, item.metadata);
+}
+
+function updateLightboxImageTone(image, src, toneRequestId) {
+  let tone = lightboxToneCache.get(src);
+
+  if (!tone) {
+    tone = getImageTone(image);
+    lightboxToneCache.set(src, tone);
+  }
+
+  if (toneRequestId === activeLightboxToneRequest && image.isConnected) {
+    lightbox.dataset.imageTone = tone;
+  }
+}
+
+function getImageTone(image) {
+  const canvas = document.createElement('canvas');
+  canvas.width = LIGHTBOX_TONE_SAMPLE_SIZE;
+  canvas.height = LIGHTBOX_TONE_SAMPLE_SIZE;
+
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+
+  if (!context) {
+    return 'dark';
+  }
+
+  try {
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let luminanceTotal = 0;
+    let visiblePixels = 0;
+
+    for (let index = 0; index < pixels.length; index += 4) {
+      const alpha = pixels[index + 3] / 255;
+
+      if (alpha <= 0.05) {
+        continue;
+      }
+
+      const luminance = (
+        0.2126 * pixels[index]
+        + 0.7152 * pixels[index + 1]
+        + 0.0722 * pixels[index + 2]
+      );
+
+      luminanceTotal += luminance * alpha;
+      visiblePixels += alpha;
+    }
+
+    const averageLuminance = visiblePixels > 0 ? luminanceTotal / visiblePixels : 0;
+    return averageLuminance < 118 ? 'dark' : 'light';
+  } catch {
+    return 'dark';
+  }
 }
 
 function openLightbox(index) {

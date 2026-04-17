@@ -51,6 +51,44 @@ npm run images
 
 When you commit photo changes, commit the updated files under `data/.generated/v1/` and `data/.generated/v1/manifest.json`, not the original files under `data/YYYY/...`, `data/portraits/`, `data/japan-2023/`, or `data/archive/`.
 
+### Removing Photos
+
+There are two ways to remove photos from the published site.
+
+If you do not want to keep the local original, delete it from that day folder, or move it somewhere outside `data/`.
+
+```text
+data/
+  2026/
+    04/
+      05/
+        R0000040-2.jpg  # remove or move this file
+```
+
+Then run:
+
+```bash
+npm run images
+```
+
+The generator will rebuild `data/.generated/v1/manifest.json` and remove stale generated thumbnails/views for images that are no longer present in the source `data/` tree. If you remove every image from a day, that day row disappears automatically.
+
+If you want to keep the local original but hide it from the site, add its path to `data/excluded-images.txt` instead. Paths are relative to `data/`.
+
+```text
+2026/04/05/R0000040-2.jpg
+```
+
+You can also hide a whole folder by ending the line with `/`.
+
+```text
+2026/04/05/
+```
+
+Then run `npm run images`. The generator skips excluded originals, rebuilds `data/.generated/v1/manifest.json`, and removes stale generated thumbnails/views for those hidden images. Commit both `data/excluded-images.txt` and the resulting changes under `data/.generated/v1/`.
+
+Do not hand-edit `data/.generated/v1/manifest.json`, generated image files, or `dist/` to hide a photo. Use either the local source files or `data/excluded-images.txt` as the source of truth, then regenerate.
+
 ### Development
 
 To start the development server:
