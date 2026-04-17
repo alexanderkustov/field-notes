@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">photographic reflexes</title>
+  <desc id="description">Social preview card for the photographic reflexes photo journal.</desc>
+  <rect width="1200" height="630" fill="#0e0d0b"/>
+  <g opacity="0.18" stroke="#d4cfc7" stroke-width="1">
+    <path d="M0 120h1200M0 240h1200M0 360h1200M0 480h1200"/>
+    <path d="M120 0v630M240 0v630M360 0v630M480 0v630M600 0v630M720 0v630M840 0v630M960 0v630M1080 0v630"/>
+  </g>
+  <g transform="translate(84 96)">
+    <rect x="0" y="0" width="154" height="206" fill="#d4cfc7" opacity="0.9"/>
+    <rect x="168" y="40" width="252" height="166" fill="#8e7a59" opacity="0.88"/>
+    <rect x="434" y="16" width="132" height="190" fill="#c8b89a" opacity="0.82"/>
+    <rect x="580" y="68" width="286" height="138" fill="#5a5751" opacity="0.9"/>
+    <rect x="880" y="24" width="150" height="182" fill="#d4cfc7" opacity="0.78"/>
+  </g>
+  <text x="84" y="418" fill="#d4cfc7" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="900" letter-spacing="-3">
+    photographic
+  </text>
+  <text x="84" y="504" fill="none" stroke="#d4cfc7" stroke-width="2" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="900" letter-spacing="-3">
+    reflexes
+  </text>
+  <text x="88" y="558" fill="#8e7a59" font-family="Courier New, monospace" font-size="22" letter-spacing="4">
+    PHOTO JOURNAL / FIELD NOTES / ARCHIVE
+  </text>
+</svg>

@@ -3,26 +3,69 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0e0d0b" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f3eee4" media="(prefers-color-scheme: light)">
   <!-- Primary Meta Tags -->
-  <title>photographic reflexes</title>
+  <title>photographic reflexes | photo journal</title>
   <meta name="title" content="photographic reflexes">
-  <meta name="description" content="A minimalist, static photo journal.">
+  <meta name="description" content="A sparse, image-led photo journal collecting dated field notes, portraits, Japan 2023 frames, and archive photographs.">
+  <meta name="application-name" content="photographic reflexes">
+  <meta name="apple-mobile-web-app-title" content="photographic reflexes">
+  <link rel="canonical" href="https://alxndr.co/">
 
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="photographic reflexes">
-  <meta property="og:description" content="A minimalist, static photo journal.">
-  <meta property="og:image" content="https://alxndr.co/social-preview.jpg">
+  <meta property="og:site_name" content="photographic reflexes">
+  <meta property="og:locale" content="en_GB">
   <meta property="og:url" content="https://alxndr.co/">
+  <meta property="og:title" content="photographic reflexes">
+  <meta property="og:description" content="A sparse, image-led photo journal collecting dated field notes, portraits, Japan 2023 frames, and archive photographs.">
+  <meta property="og:image" content="https://alxndr.co/social-preview.png">
+  <meta property="og:image:secure_url" content="https://alxndr.co/social-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="photographic reflexes photo journal social preview">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:domain" content="alxndr.co">
+  <meta name="twitter:url" content="https://alxndr.co/">
   <meta name="twitter:title" content="photographic reflexes">
-  <meta name="twitter:description" content="A minimalist, static photo journal.">
-  <meta name="twitter:image" content="https://alxndr.co/social-preview.jpg">
+  <meta name="twitter:description" content="A sparse, image-led photo journal collecting dated field notes, portraits, Japan 2023 frames, and archive photographs.">
+  <meta name="twitter:image" content="https://alxndr.co/social-preview.png">
+  <meta name="twitter:image:alt" content="photographic reflexes photo journal social preview">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;900&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ImageGallery",
+      "@id": "https://alxndr.co/#imagegallery",
+      "name": "photographic reflexes",
+      "url": "https://alxndr.co/",
+      "description": "A sparse, image-led photo journal collecting dated field notes, portraits, Japan 2023 frames, and archive photographs.",
+      "inLanguage": "en-GB",
+      "image": "https://alxndr.co/social-preview.png",
+      "hasPart": [
+        {
+          "@type": "CollectionPage",
+          "name": "portraits",
+          "url": "https://alxndr.co/portraits/"
+        },
+        {
+          "@type": "CollectionPage",
+          "name": "japan 2023",
+          "url": "https://alxndr.co/japan-2023/"
+        }
+      ]
+    }
+  </script>
 <script>
   try {
     const savedTheme = localStorage.getItem('field-notes-theme');
@@ -59,7 +102,10 @@
   </div>
 </header>
 
-<div id="journal"></div>
+<main class="site-content" aria-labelledby="page-title">
+  <h1 class="visually-hidden" id="page-title">photographic reflexes photo journal</h1>
+  <div id="journal"></div>
+</main>
 
 <!-- Lightbox -->
 <div class="lightbox" id="lightbox">

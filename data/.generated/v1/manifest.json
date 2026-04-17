@@ -943,6 +943,154 @@
       "month": "02"
     },
     {
+      "id": "d2/488fa1ecb6ed0055ea6b8c7b555c35622d7f9f2965adcd484268ae9ef5aa02",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.0025,
+        "iso": 400
+      },
+      "width": 7008,
+      "height": 4380,
+      "date": "2025-03-01",
+      "year": "2025",
+      "month": "03",
+      "day": "01"
+    },
+    {
+      "id": "a5/6d13ce69461dca4c6b8dce21b3070d224ae4bb94d0bd45aec7a23a8cfd9a1a",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.0025,
+        "iso": 400
+      },
+      "width": 4354,
+      "height": 5443,
+      "date": "2025-03-01",
+      "year": "2025",
+      "month": "03",
+      "day": "01"
+    },
+    {
+      "id": "d2/7ed64733be156288ab19fdf3245d5a9e55c718f37e701863cafdb30e3d0cb7",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.0025,
+        "iso": 320
+      },
+      "width": 7008,
+      "height": 4672,
+      "date": "2025-03-01",
+      "year": "2025",
+      "month": "03",
+      "day": "01"
+    },
+    {
+      "id": "4d/57a3546074ab2faee1feb6716a957373a790def9b6684c57c177acca71b9b2",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.0025,
+        "iso": 400
+      },
+      "width": 6796,
+      "height": 3823,
+      "date": "2025-03-01",
+      "year": "2025",
+      "month": "03",
+      "day": "01"
+    },
+    {
+      "id": "37/b52dfafb6abac599b41fbf393fd68b028749acfda23673c2639f42919974a3",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.0025,
+        "iso": 160
+      },
+      "width": 7008,
+      "height": 4672,
+      "date": "2025-03-01",
+      "year": "2025",
+      "month": "03",
+      "day": "01"
+    },
+    {
+      "id": "63/fd8723c0a027d1b6b7c657a3e53646faa7a9ec1924b98804b57976f9cf4042",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.0025,
+        "iso": 200
+      },
+      "width": 6914,
+      "height": 3889,
+      "date": "2025-03-01",
+      "year": "2025",
+      "month": "03",
+      "day": "01"
+    },
+    {
+      "id": "1b/c6e5622cb75ee2200b85d81dd294bdc47ff114332ac83b0e47bdf3c98df248",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 50mm F1.2 GM",
+        "focalLength": 50,
+        "aperture": 1.2,
+        "exposureTime": 0.000125,
+        "iso": 100
+      },
+      "width": 7006,
+      "height": 4671,
+      "date": "2025-04-25",
+      "year": "2025",
+      "month": "04",
+      "day": "25"
+    },
+    {
+      "id": "59/ab8dc39d29845879b818f5ec9fbbd12d90bfaaf2fb86efe74ba8637767a0a9",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.025,
+        "iso": 160,
+        "exposureCompensation": -1
+      },
+      "width": 6654,
+      "height": 4159,
+      "date": "2025-04-25",
+      "year": "2025",
+      "month": "04",
+      "day": "25"
+    },
+    {
+      "id": "90/3946bcf89c756aa18384c38c7039040d250ed763972b04af42cabe85f1cb6b",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.025,
+        "iso": 320,
+        "exposureCompensation": -1
+      },
+      "width": 7006,
+      "height": 4379,
+      "date": "2025-04-25",
+      "year": "2025",
+      "month": "04",
+      "day": "25"
+    },
+    {
       "id": "03/52771e34e106aa920fc78e6ea91e2004d54b9e19fbe3c159ccb3f506d4c771",
       "kind": "monthly",
       "metadata": {
@@ -1017,6 +1165,157 @@
       "height": 4411,
       "year": "2025",
       "month": "09"
+    },
+    {
+      "id": "9b/153ac4513a2a8ac619c0588d332977a2f71914ac7d1fc619a5f2003c64d615",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 35mm F1.4 GM",
+        "focalLength": 35,
+        "aperture": 8,
+        "exposureTime": 0.0125,
+        "iso": 100,
+        "exposureCompensation": -1
+      },
+      "width": 6939,
+      "height": 4626,
+      "date": "2025-11-13",
+      "year": "2025",
+      "month": "11",
+      "day": "13"
+    },
+    {
+      "id": "87/ab8334cd35f6b285587709d76c96f90bf21d481c84cfec258a7920f08d7ced",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 35mm F1.4 GM",
+        "focalLength": 35,
+        "aperture": 16,
+        "exposureTime": 0.005,
+        "iso": 100,
+        "exposureCompensation": -0.7
+      },
+      "width": 7008,
+      "height": 3942,
+      "date": "2025-11-13",
+      "year": "2025",
+      "month": "11",
+      "day": "13"
+    },
+    {
+      "id": "d5/5671e68bb021b3a479d939df3cbcd579a910b516db2711e6b3d6ee80caf595",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 35mm F1.4 GM",
+        "focalLength": 35,
+        "aperture": 16,
+        "exposureTime": 0.025,
+        "iso": 500,
+        "exposureCompensation": -0.7
+      },
+      "width": 6771,
+      "height": 4514,
+      "date": "2025-11-13",
+      "year": "2025",
+      "month": "11",
+      "day": "13"
+    },
+    {
+      "id": "0f/e6e9737c3c1b19b2121df9c585a04064cd162dc75e43742a92d05760a5085d",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 50mm F1.2 GM",
+        "focalLength": 50,
+        "aperture": 16,
+        "exposureTime": 0.00625,
+        "iso": 100,
+        "exposureCompensation": -0.7
+      },
+      "width": 5656,
+      "height": 4525,
+      "date": "2025-11-13",
+      "year": "2025",
+      "month": "11",
+      "day": "13"
+    },
+    {
+      "id": "65/de2829edc1246fb3306d1a37f74aabed62f08b1ab9656f8c3470d3973f0be5",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 35mm F1.4 GM",
+        "focalLength": 35,
+        "aperture": 1.4,
+        "exposureTime": 0.01,
+        "iso": 100,
+        "exposureCompensation": -0.7
+      },
+      "width": 6975,
+      "height": 4650,
+      "date": "2025-11-13",
+      "year": "2025",
+      "month": "11",
+      "day": "13"
+    },
+    {
+      "id": "a4/39dd3e07e14b6aa7777b7eac8f82c9b544f9fa3d4f7b77413ab8ffcd5f4128",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 35mm F1.4 GM",
+        "focalLength": 35,
+        "aperture": 1.4,
+        "exposureTime": 0.00625,
+        "iso": 100,
+        "exposureCompensation": -0.7
+      },
+      "width": 6914,
+      "height": 4609,
+      "date": "2025-11-13",
+      "year": "2025",
+      "month": "11",
+      "day": "13"
+    },
+    {
+      "id": "76/62a25feb0501d61cc08a611f4c2304a42ec1315a749c2a1cc976aa8b4c58f9",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 35mm F1.4 GM",
+        "focalLength": 35,
+        "aperture": 8,
+        "exposureTime": 0.025,
+        "iso": 400
+      },
+      "width": 7008,
+      "height": 4380,
+      "date": "2025-11-15",
+      "year": "2025",
+      "month": "11",
+      "day": "15"
+    },
+    {
+      "id": "50/da76e502df450c1b26a66132a2aa5f774f569920adfa0e16ed8cbfdaf6b317",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 35mm F1.4 GM",
+        "focalLength": 35,
+        "aperture": 5,
+        "exposureTime": 0.005,
+        "iso": 100,
+        "exposureCompensation": -0.3
+      },
+      "width": 7008,
+      "height": 3942,
+      "date": "2025-11-15",
+      "year": "2025",
+      "month": "11",
+      "day": "15"
     },
     {
       "id": "4d/9cf6417e10cb0cfc439247a5883c2db388b7caadd0334ac0529902b7ae5b63",
@@ -1241,6 +1540,120 @@
       "day": "21"
     },
     {
+      "id": "3d/036e1e8f96732299396de70ed991f3330e1d1c34f8b668dfa443696901b734",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 70-200mm F2.8 GM OSS II",
+        "focalLength": 70,
+        "aperture": 8,
+        "exposureTime": 0.000625,
+        "iso": 100,
+        "exposureCompensation": -1
+      },
+      "width": 6234,
+      "height": 4156,
+      "date": "2025-11-22",
+      "year": "2025",
+      "month": "11",
+      "day": "22"
+    },
+    {
+      "id": "79/f3e2266cfc80ef629bbf9790aba3051da6af99c82635137435e9cba735e42c",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 70-200mm F2.8 GM OSS II",
+        "focalLength": 200,
+        "aperture": 8,
+        "exposureTime": 0.000625,
+        "iso": 100,
+        "exposureCompensation": -1
+      },
+      "width": 4672,
+      "height": 7008,
+      "date": "2025-11-22",
+      "year": "2025",
+      "month": "11",
+      "day": "22"
+    },
+    {
+      "id": "17/8274933114582b62893f85b9b596289d64f7e391fa54d707dd0d52102e9c13",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 70-200mm F2.8 GM OSS II",
+        "focalLength": 200,
+        "aperture": 8,
+        "exposureTime": 0.000625,
+        "iso": 100,
+        "exposureCompensation": -1
+      },
+      "width": 4633,
+      "height": 6950,
+      "date": "2025-11-22",
+      "year": "2025",
+      "month": "11",
+      "day": "22"
+    },
+    {
+      "id": "17/1c173c53288ed5cf7d2b1051dc7072f6337a40525851e169db4c20811afa2f",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 70-200mm F2.8 GM OSS II",
+        "focalLength": 200,
+        "aperture": 8,
+        "exposureTime": 0.000625,
+        "iso": 100,
+        "exposureCompensation": -1
+      },
+      "width": 7008,
+      "height": 4672,
+      "date": "2025-11-22",
+      "year": "2025",
+      "month": "11",
+      "day": "22"
+    },
+    {
+      "id": "5f/ec1acb3b483078eeabd31ab055f607bca18ac1d54b815cfc26f544948b90a5",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 70-200mm F2.8 GM OSS II",
+        "focalLength": 72,
+        "aperture": 4.5,
+        "exposureTime": 0.00125,
+        "iso": 100,
+        "exposureCompensation": -1
+      },
+      "width": 4672,
+      "height": 7008,
+      "date": "2025-11-22",
+      "year": "2025",
+      "month": "11",
+      "day": "22"
+    },
+    {
+      "id": "3e/07fdcb29270edcda115376da89e151ef5d70959627ec9eeb23efc646dbccc2",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "FE 70-200mm F2.8 GM OSS II",
+        "focalLength": 70,
+        "aperture": 5.6,
+        "exposureTime": 0.00125,
+        "iso": 100,
+        "exposureCompensation": 0.7
+      },
+      "width": 5752,
+      "height": 3235,
+      "date": "2025-11-22",
+      "year": "2025",
+      "month": "11",
+      "day": "22"
+    },
+    {
       "id": "1a/7e38a3276dab2b7e6d8ce7232a4f67ee9dd6fc49b0b725d46a0151aa560213",
       "kind": "dated",
       "metadata": {
@@ -1275,6 +1688,40 @@
       "day": "27"
     },
     {
+      "id": "ef/e876370516bddd04b47c43ea6332be04098525aacdf54367048f1767485fb2",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.004,
+        "iso": 250,
+        "exposureCompensation": -2
+      },
+      "width": 4459,
+      "height": 5574,
+      "date": "2025-11-30",
+      "year": "2025",
+      "month": "11",
+      "day": "30"
+    },
+    {
+      "id": "40/21fa2728af66483ee54b04d42cb997cbf52c29dd53eb8f84b74a35c3a6a0ec",
+      "kind": "dated",
+      "metadata": {
+        "camera": "ILCE-7M4",
+        "lens": "----",
+        "exposureTime": 0.001,
+        "iso": 1000,
+        "exposureCompensation": -1.3
+      },
+      "width": 5329,
+      "height": 3553,
+      "date": "2025-11-30",
+      "year": "2025",
+      "month": "11",
+      "day": "30"
+    },
+    {
       "id": "68/fb3a53136c3e93069d7c13d8d9ab1813b8bce5954a438aba898954dfdafd1a",
       "kind": "monthly",
       "metadata": {
@@ -1292,23 +1739,6 @@
       "month": "11"
     },
     {
-      "id": "6f/4d33239580bb5268ae1dcadd17a4cea872b01d7f50e0897378db6657887915",
-      "kind": "monthly",
-      "metadata": {
-        "camera": "ILCE-7M4",
-        "lens": "FE 35mm F1.4 GM",
-        "focalLength": 35,
-        "aperture": 16,
-        "exposureTime": 0.005,
-        "iso": 100,
-        "exposureCompensation": -0.7
-      },
-      "width": 7008,
-      "height": 3942,
-      "year": "2025",
-      "month": "11"
-    },
-    {
       "id": "23/98ab15e0e89afdaff5787ac3655e3b45b9cd8b9729bbb94c49026603c1894b",
       "kind": "monthly",
       "metadata": {
@@ -1322,23 +1752,6 @@
       },
       "width": 6893,
       "height": 4595,
-      "year": "2025",
-      "month": "11"
-    },
-    {
-      "id": "32/11b46e00fd5763192f9c790bbec938b69cd7c600e031b959e7a2ea3ebebeed",
-      "kind": "monthly",
-      "metadata": {
-        "camera": "ILCE-7M4",
-        "lens": "FE 35mm F1.4 GM",
-        "focalLength": 35,
-        "aperture": 1.4,
-        "exposureTime": 0.00625,
-        "iso": 100,
-        "exposureCompensation": -0.7
-      },
-      "width": 6957,
-      "height": 4638,
       "year": "2025",
       "month": "11"
     },

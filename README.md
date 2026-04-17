@@ -93,6 +93,12 @@ The Vite config uses a relative asset base, so the built site works from a proje
 - The generator also writes a small metadata manifest so the lightbox can show camera settings without reading EXIF in the browser.
 - Originals stay in `data/YYYY/MM/`, `data/YYYY/MM/DD/`, `data/portraits/`, `data/japan-2023/`, or `data/archive/` as local-only source material.
 
+## SEO and Social Sharing
+
+- Page-level metadata lives in `index.html`, `portraits/index.html`, and `japan-2023/index.html`.
+- Search metadata assets live in `public/`, including `robots.txt`, `sitemap.xml`, and the social preview image.
+- If the live URL structure changes, update the canonical URLs, Open Graph URLs, and sitemap entries together.
+
 ## Git Tracking Model
 
 - Git ignores the raw `data/` photo tree and tracks only `data/.generated/v1/`.
