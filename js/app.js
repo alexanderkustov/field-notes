@@ -3,7 +3,7 @@ import generatedManifest from '../data/.generated/v1/manifest.json';
 const THEME_STORAGE_KEY = 'field-notes-theme';
 const ARCHIVE_LABEL = 'Archive';
 const PRIORITY_IMAGE_COUNT = 2;
-const HOME_PREVIEW_ASPECT_RATIO = '4 / 5';
+const FOUR_BY_FIVE_PREVIEW_ASPECT_RATIO = '4 / 5';
 const LIGHTBOX_TONE_SAMPLE_SIZE = 16;
 const SPECIAL_COLLECTIONS = [
   { key: 'portraits', label: 'Portraits', summaryNoun: 'portrait' },
@@ -45,9 +45,11 @@ function applyTheme(theme) {
   if (!toggle) return;
 
   const toggleTarget = nextTheme === 'light' ? 'dark' : 'light';
-  toggle.textContent = toggleTarget;
-  toggle.setAttribute('aria-label', `Switch to ${toggleTarget} theme`);
-  toggle.setAttribute('aria-pressed', String(nextTheme === 'light'));
+  const toggleLabel = `Switch to ${toggleTarget} theme`;
+  toggle.dataset.themeTarget = toggleTarget;
+  toggle.setAttribute('aria-label', toggleLabel);
+  toggle.setAttribute('title', toggleLabel);
+  toggle.removeAttribute('aria-pressed');
 }
 
 function getSystemTheme() {
@@ -140,12 +142,14 @@ function renderJournal({ entries, sections, archive }, pageConfig) {
       lastMonth = monthLabel;
     }
 
-    const row = document.createElement('div');
+    const row = document.createElement('article');
     row.className = (entry.kind === 'month' || entry.kind === 'yearly-folder') ? 'day-row day-row--undated' : 'day-row';
+    row.setAttribute('aria-label', entry.label);
 
     if (entry.kind === 'day') {
-      const lbl = document.createElement('div');
+      const lbl = document.createElement('time');
       lbl.className = 'date-label';
+      lbl.dateTime = entry.date;
       lbl.innerHTML = `<span class="date-day">${entry.dayNum}</span><span class="date-month">${entry.monthShort}</span>`;
       row.appendChild(lbl);
     }
@@ -157,7 +161,7 @@ function renderJournal({ entries, sections, archive }, pageConfig) {
       const prioritizeImage = di === 0 && idx < PRIORITY_IMAGE_COUNT;
       const lightboxIndex = registerLightboxItem(image, entry.label);
       strip.appendChild(createImageCard(image, entry.label, prioritizeImage, idx, lightboxIndex, {
-        previewAspectRatio: HOME_PREVIEW_ASPECT_RATIO,
+        previewAspectRatio: FOUR_BY_FIVE_PREVIEW_ASPECT_RATIO,
       }));
     });
 
@@ -173,7 +177,7 @@ function renderJournal({ entries, sections, archive }, pageConfig) {
   if (archive.images.length > 0) {
     journal.appendChild(createSectionLabel(ARCHIVE_LABEL));
     journal.appendChild(createArchiveLayout(archive.images, ARCHIVE_LABEL, true, {
-      previewAspectRatio: HOME_PREVIEW_ASPECT_RATIO,
+      previewAspectRatio: FOUR_BY_FIVE_PREVIEW_ASPECT_RATIO,
     }));
   }
 }
@@ -260,7 +264,9 @@ function createCollectionLayout(images, label, options = {}) {
 
   images.forEach((image, idx) => {
     const lightboxIndex = registerLightboxItem(image, label);
-    const card = createImageCard(image, label, idx < PRIORITY_IMAGE_COUNT, idx, lightboxIndex);
+    const card = createImageCard(image, label, idx < PRIORITY_IMAGE_COUNT, idx, lightboxIndex, {
+      previewAspectRatio: options.previewAspectRatio,
+    });
     card.classList.add('collection-card');
     layout.appendChild(card);
   });
@@ -278,10 +284,12 @@ function createCollectionLayout(images, label, options = {}) {
 }
 
 function createCollectionPage(section, pageConfig) {
-  const useMasonryLayout = pageConfig.collection?.key === 'japan-2023';
+  const collectionLayoutOptions = pageConfig.collection?.key === 'japan-2023'
+    ? { previewAspectRatio: FOUR_BY_FIVE_PREVIEW_ASPECT_RATIO }
+    : {};
 
   if (!pageConfig.collection?.groupBySubfolder) {
-    return createCollectionLayout(section.images, section.label, { masonry: useMasonryLayout });
+    return createCollectionLayout(section.images, section.label, collectionLayoutOptions);
   }
 
   const page = document.createElement('div');
@@ -290,18 +298,18 @@ function createCollectionPage(section, pageConfig) {
   const groupedSections = Array.isArray(section.groups) ? section.groups : [];
 
   if (rootImages.length > 0) {
-    page.appendChild(createCollectionLayout(rootImages, section.label, { masonry: useMasonryLayout }));
+    page.appendChild(createCollectionLayout(rootImages, section.label, collectionLayoutOptions));
   }
 
   groupedSections.forEach(group => {
     page.append(
       createCollectionGroupSeparator(group.label),
-      createCollectionLayout(group.images, `${section.label} · ${group.label}`, { masonry: useMasonryLayout })
+      createCollectionLayout(group.images, `${section.label} · ${group.label}`, collectionLayoutOptions)
     );
   });
 
   if (page.childElementCount === 0) {
-    page.appendChild(createCollectionLayout(section.images, section.label, { masonry: useMasonryLayout }));
+    page.appendChild(createCollectionLayout(section.images, section.label, collectionLayoutOptions));
   }
 
   return page;
@@ -775,7 +783,7 @@ function initData(pageConfig) {
           year: entry.year,
           folderName: entry.folderName,
           label: `${entry.folderName} ${entry.year}`,
-          monthLabel: `${entry.folderName.toUpperCase()} ${entry.year}`,
+          monthLabel: `${entry.folderName} ${entry.year}`,
           images: [],
         });
       }
@@ -843,8 +851,8 @@ function initData(pageConfig) {
 
 function createDayEntry(dateStr, year, month, day) {
   const d = new Date(Number(year), Number(month) - 1, Number(day));
-  const monthShort = d.toLocaleString('en-GB', { month: 'short' }).toUpperCase();
-  const monthLabel = d.toLocaleString('en-GB', { month: 'long' }).toUpperCase();
+  const monthShort = d.toLocaleString('en-GB', { month: 'short' });
+  const monthLabel = d.toLocaleString('en-GB', { month: 'long' });
 
   return {
     kind: 'day',
@@ -870,7 +878,7 @@ function createMonthEntry(year, month) {
     year,
     monthNum: month,
     label: `${monthLong} ${year}`,
-    monthLabel: `${monthLong.toUpperCase()} ${year}`,
+    monthLabel: `${monthLong} ${year}`,
     images: []
   };
 }

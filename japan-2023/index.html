@@ -38,7 +38,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;900&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;900&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -82,17 +82,24 @@
 <header>
   <div class="site-brand">
     <a class="site-name" href="../">
-      <span>photographic</span>
-      <span>reflexes</span>
+      <span>Photographic</span>
+      <span>Reflexes</span>
     </a>
     <nav class="site-nav" aria-label="Sections">
-      <a class="site-nav-link" href="../">journal</a>
-      <a class="site-nav-link" href="../portraits/">portraits</a>
-      <a class="site-nav-link is-active" href="../japan-2023/">japan 2023</a>
+      <a class="site-nav-link" href="../">Journal</a>
+      <a class="site-nav-link" href="../portraits/">Portraits</a>
+      <a class="site-nav-link is-active" href="../japan-2023/" aria-current="page">Japan 2023</a>
     </nav>
   </div>
   <div class="header-tools">
-    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme">light</button>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch to light theme" data-theme-target="light">
+      <svg class="theme-toggle-icon theme-toggle-icon--sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0-5 1.1 3h-2.2L12 2Zm0 20-1.1-3h2.2L12 22ZM2 12l3-1.1v2.2L2 12Zm20 0-3 1.1v-2.2L22 12ZM4.2 4.2l2.9 1.3-1.6 1.6-1.3-2.9Zm15.6 15.6-2.9-1.3 1.6-1.6 1.3 2.9Zm0-15.6-1.3 2.9-1.6-1.6 2.9-1.3ZM4.2 19.8l1.3-2.9 1.6 1.6-2.9 1.3Z"/>
+      </svg>
+      <svg class="theme-toggle-icon theme-toggle-icon--moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M20.6 15.6A8.5 8.5 0 0 1 8.4 3.4a9.5 9.5 0 1 0 12.2 12.2Z"/>
+      </svg>
+    </button>
     <span class="header-meta" data-loading-label="Loading japan 2023"></span>
   </div>
 </header>
@@ -104,7 +111,7 @@
 
 <div class="lightbox" id="lightbox">
   <div class="lightbox-inner">
-    <button class="lightbox-close" id="lb-close">close ✕</button>
+    <button class="lightbox-close" id="lb-close">Close ✕</button>
     <div id="lb-img-wrap"></div>
     <div class="lightbox-meta">
       <div class="lightbox-meta-header">
@@ -117,7 +124,7 @@
           aria-expanded="false"
           hidden
         >
-          info
+          Info
         </button>
       </div>
       <dl class="lightbox-exif" id="lb-exif" hidden></dl>
